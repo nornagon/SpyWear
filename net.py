@@ -1,16 +1,27 @@
-from twisted.internet import reactor, protocol
+from twisted.internet import reactor, protocol, task
+import pyglet
+from model import *
 
-class Echo(protocol.Protocol):
+class GGJServer(protocol.Protocol):
 	def dataReceived(self, data):
 		self.transport.write(data)
+	
+	def connectionMade(self):
+		self.transport.write("o hi")
 
-def main():
-	"""This runs the protocol on port 8000"""
+def start_server():
+	"""This runs the protocol on port 4444"""
 	factory = protocol.ServerFactory()
-	factory.protocol = Echo
-	reactor.listenTCP(8808,factory)
-	reactor.run()
+	factory.protocol = GGJServer
+	reactor.listenTCP(4444, factory)
+
+def server_update():
+	dt = pyglet.clock.tick(poll=False)
+	world.update(dt)
 
 # this only runs if the module was *not* imported
 if __name__ == '__main__':
-	main()
+	start_server()
+	update = task.LoopingCall(server_update)
+	update.start(1/60.)
+	reactor.run()

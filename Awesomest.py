@@ -15,7 +15,8 @@ HEIGHT = 768
 
 window = window.Window(width=1024, height=768)
 
-@window.event
+#@window.event
+
 def on_draw():
 	world.draw(window)
 
@@ -40,11 +41,12 @@ for i in xrange(16):
 
 world.dudes.append(d)
 
-
-
-if sys.argv[0] == '-h':
+if sys.argv[1] == '-h':
 	print "server mode"
+	start_server()
 
-reactor.run(call_interval=1/60.)
+
+
+reactor.run(call_interval=1/1000.)
 #app.run()
 
