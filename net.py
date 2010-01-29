@@ -9,11 +9,29 @@ class GGJServer(protocol.Protocol):
 	def connectionMade(self):
 		self.transport.write("o hi")
 
-def start_server():
+def server_world():
 	"""This runs the protocol on port 4444"""
 	factory = protocol.ServerFactory()
 	factory.protocol = GGJServer
 	reactor.listenTCP(4444, factory)
+	world = local_world()
+
+	return world
+
+
+def client_world(remote_host):
+	return World()
+
+def local_world():
+	world = World()
+	
+	for i in xrange(16):
+		world.buildings.append(Building(i))
+	
+	for i in xrange(20):
+		world.add_dude()
+
+	return world
 
 def server_update():
 	dt = pyglet.clock.tick(poll=False)

@@ -4,12 +4,15 @@ import sys
 from pyglet import *
 from model import *
 from net import *
+import random
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 WIDTH = 1024
 HEIGHT = 768
+
+random.seed()
 
 window = window.Window(width=1024, height=768)
 
@@ -19,33 +22,22 @@ def on_draw():
 
 @window.event
 def on_close():
-	print "stopping"
+	window.close()
 	reactor.stop()
 	return True
 
 def update(dt):
-	d.location += 0.001
 	world.update(dt)
 
 clock.schedule(update)
 
-
-d = Dude()
-
-for i in xrange(16):
-	world.buildings.append(Building(i))
-
-world.dudes.append(d)
-
-if sys.argv[1] == '-h':
+if len(sys.argv) >= 2 and sys.argv[1] == '-h':
 	print "server mode"
-	start_server()
-
-
-if sys.argv[0] == '-h':
-	print "server mode"
-	start_server()
-
+	world = server_world()
+elif len(sys.argv) >= 2:
+	world = client_world(sys.argv[1])
+else:
+	world = local_world()
 
 def pygletPump():
 	clock.tick(poll=True)
