@@ -7,11 +7,15 @@ class World:
 		self.buildings = []
 		self.dudes = []
 		self.players = []
+		self.background = image.load('assets/City.png')
 
 	def draw(self, window):
 		window.clear()
 
-		label = text.Label("FPS: %f" % clock.get_fps(), font_name="Georgia", font_size=36, x=500, y=500)
+		self.background.blit(256,0)
+
+		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
+				font_size=24, x=0, y=7)
 		label.draw()
 
 		for b in self.buildings:
