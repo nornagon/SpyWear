@@ -2,6 +2,9 @@
 
 from pyglet import *
 
+WIDTH = 1024
+HEIGHT = 768
+
 window = window.Window(width=1024, height=768)
 
 @window.event
