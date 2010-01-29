@@ -2,7 +2,7 @@
 
 from pyglet import *
 
-window = window.Window()
+window = window.Window(width=1024, height=768)
 
 @window.event
 def on_draw():
