@@ -10,11 +10,12 @@ window = window.Window(width=1024, height=768)
 
 @window.event
 def on_draw():
-	dt = clock.tick()
-	world.update(dt)
 	world.draw(window)
 
+def update(dt):
+	world.update(dt)
 
+clock.schedule(update)
 
 app.run()
 
