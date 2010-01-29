@@ -71,6 +71,7 @@ class Building:
 	def __init__(self, id, state=None):
 		self.id = id
 		self.type = self.TYPE_CLOTHES
+		self.door_location = 0
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 

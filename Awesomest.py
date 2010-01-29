@@ -28,20 +28,19 @@ def on_close():
 	reactor.stop()
 	return True
 
+keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
+	       key.S : DOWN, key.DOWN : DOWN, key.D : RIGHT, key.RIGHT : RIGHT}
+
 @window.event
 def on_key_press(symbol, modifiers):
-	if symbol == key.UP:
-		world.get_player(myplayerID).turn(UP)
-		print "turning UP"
-	if symbol == key.DOWN:
-		world.get_player(myplayerID).turn(DOWN)
-		print "turning DOWN"
-	if symbol == key.LEFT:
-		world.get_player(myplayerID).turn(LEFT)
-		print "turning LEFT"
-	if symbol == key.RIGHT:
-		world.get_player(myplayerID).turn(RIGHT)
-		print "turning RIGHT"
+	if symbol in keybindings.keys():
+	       world.get_player(myplayerID).turn(keybindings[symbol])
+	if symbol == key.SPACE:
+		world.get_player(myplayerID).stopstart()
+	if symbol == key.ENTER:
+		world.get_player(myplayerID).enter()
+	if symbol == key.B:
+		world.get_player(myplayerID).bomb()
 
 def update(dt):
 	world.update(dt)

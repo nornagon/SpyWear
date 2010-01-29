@@ -5,25 +5,25 @@ from model import *
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |       |   |       |   |       |   |       |
+#   |   0   |   |   1   |   |   2   |   |   3   |
 #   |       |   |       |   |       |   |       |
 # 6 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 5 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |       |   |       |   |       |   |       |
+#   |   4   |   |   5   |   |   6   |   |   7   |
 #   |       |   |       |   |       |   |       |
 # 4 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 3 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |       |   |       |   |       |   |       |
+#   |   8   |   |   9   |   |  10   |   |  11   |
 #   |       |   |       |   |       |   |       |
 # 2 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 1 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |       |   |       |   |       |   |       |
+#   |  12   |   |  13   |   |  14   |   |  15   |
 #   |       |   |       |   |       |   |       |
 # 0 +-------+---+-------+---+-------+---+-------+
 BUILDINGS_X = 4
@@ -119,12 +119,25 @@ class Dude:
 		if new_direction == self.opposite(self.direction):
 			self.direction = new_direction
 			self.next_direction = new_direction
-                        print "Backtracking to ", new_direction
 		else:
 			self.next_direction = new_direction
-			print "Aiming to turn to ", new_direction
                         
+        def stopstart(self):
+		self.stopped = not self.stopped
 
+	def enter(self):
+		# if near door, enter building
+		# self.path combined with location
+		
+		# else error message
+		pass
+
+	def bomb(self):
+		# if in building, set bomb
+		# if bomb in play, set off bomb
+		# else error message
+		pass
+                
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -147,17 +160,16 @@ class Dude:
 		if left_right_path(self.path):
 			x += BUILDINGS_X * 2
 
-#		print "next intersect is", x
 		return x
 
 	def update(self, time):
-                
+		if self.stopped:
+			return
 		if self.direction == RIGHT or self.direction == UP:
-			# going from 0 to 1
-			nextlocation = self.location + time * self.SPEED 
+                	# going from 0 to 1
+                        nextlocation = self.location + time * self.SPEED 
 			if nextlocation > PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
 				# we have passed the intersect and are turning
-				print "Passed an intersect RIGHT or UP and turning"
 				new_path = self.next_intersect()
 				self.location = PATH_INTERSECTS[self.path]
 				self.path = new_path
@@ -169,7 +181,6 @@ class Dude:
 			nextlocation = self.location - time * self.SPEED 
 			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
 				# we have passed the intersect and are turning
-				print "Passed an intersect LEFT or DOWN and turning"
                                 new_path = self.next_intersect()
 				self.location = PATH_INTERSECTS[self.path]
 				self.path = new_path
