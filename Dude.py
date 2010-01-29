@@ -87,8 +87,10 @@ class Dude:
 		self.path = random.randint(0, PATHS - 1)
 		if left_right_path(self.path):
 			self.direction = random.randint(LEFT, RIGHT)
+			self.next_direction = self.direction
 		else:
 			self.direction = random.randint(UP, DOWN)
+			self.next_direction = self.direction
 
 	def draw(self, window):
 		if left_right_path(self.path):
@@ -106,7 +108,7 @@ class Dude:
 
 
 	def forward(self):
-		if self.direction % 2 == 0:
+		if self.direction == UP or self.direction == RIGHT:
 			# going 'forwards'
 			return True
 		else:
@@ -114,33 +116,38 @@ class Dude:
 			return False
 
 	def turn(self, new_direction):
-                if new_direction == self.opposite(self.direction):
-                        self.direction = new_direction
-                else:
-                        self.next_direction = new_direction
+		if new_direction == self.opposite(self.direction):
+			self.direction = new_direction
+			self.next_direction = new_direction
+                        print "Backtracking to ", new_direction
+		else:
+			self.next_direction = new_direction
+			print "Aiming to turn to ", new_direction
                         
 
-        def opposite(self, direction):
-                if direction == LEFT:
-                        return RIGHT
-                if direction == RIGHT:
-                        return LEFT
-                if direction == UP:
-                        return DOWN
-                if direction == DOWN:
-                        return UP
+	def opposite(self, direction):
+		if direction == LEFT:
+			return RIGHT
+		if direction == RIGHT:
+			return LEFT
+		if direction == UP:
+			return DOWN
+		if direction == DOWN:
+			return UP
 
 	# This function returns the next path which the dude will cross.
 	def next_intersect(self):
 		x = 0
-		while PATH_INTERSECTS[x] < self.location:
+		while PATH_INTERSECTS[x] < self.location and x < (BUILDINGS_X * 2 - 1):
 			x += 1
 
-		if not self.forward():
+		if not self.forward() and x > 0:
 			x -= 1
 
-                if left_right_path(self.path):
-                        x += BUILDINGS_X * 2
+		if left_right_path(self.path):
+			x += BUILDINGS_X * 2
+
+#		print "next intersect is", x
 		return x
 
 	def update(self, time):
@@ -148,20 +155,24 @@ class Dude:
 		if self.direction == RIGHT or self.direction == UP:
 			# going from 0 to 1
 			nextlocation = self.location + time * self.SPEED 
-			if nextlocation > self.next_intersect() and self.direction != self.next_direction:
-                                # we have passed the intersect and are turning
-                                self.location = PATH_INTERSECTS[self.path]
-                                self.path = self.next_intersect()
-                                self.direction = self.next_direction
-                        else:
-                             self.location = nextlocation   
+			if nextlocation > PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
+				# we have passed the intersect and are turning
+				print "Passed an intersect RIGHT or UP and turning"
+				new_path = self.next_intersect()
+				self.location = PATH_INTERSECTS[self.path]
+				self.path = new_path
+				self.direction = self.next_direction
+			else:
+				self.location = nextlocation   
 		else:
 			# going from 1 to 0
 			nextlocation = self.location - time * self.SPEED 
-			if nextlocation < self.next_intersect() and self.direction != self.next_direction:
-                                # we have passed the intersect and are turning
-                                self.location = PATH_INTERSECTS[self.path]
-                                self.path = self.next_intersect()
-                                self.direction = self.next_direction
-                        else:
-                             self.location = nextlocation   
+			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
+				# we have passed the intersect and are turning
+				print "Passed an intersect LEFT or DOWN and turning"
+                                new_path = self.next_intersect()
+				self.location = PATH_INTERSECTS[self.path]
+				self.path = new_path
+				self.direction = self.next_direction
+			else:
+				self.location = nextlocation   

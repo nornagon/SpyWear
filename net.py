@@ -24,6 +24,7 @@ class GGJClient:
 	def connected(self, perspective):
 		self.perspective = perspective
 		print "Connected! Wahoo!"
+		perspective.callRemote('login', "winnerer")
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"

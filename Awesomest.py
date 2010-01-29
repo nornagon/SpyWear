@@ -30,14 +30,18 @@ def on_close():
 
 @window.event
 def on_key_press(symbol, modifiers):
-        if symbol == key.UP:
-                world.get_player(myplayerID).turn(UP)
-        if symbol == key.DOWN:
-                world.get_player(myplayerID).turn(DOWN)
-        if symbol == key.LEFT:
-                world.get_player(myplayerID).turn(LEFT)
-        if symbol == key.RIGHT:
-                world.get_player(myplayerID).turn(RIGHT)
+	if symbol == key.UP:
+		world.get_player(myplayerID).turn(UP)
+		print "turning UP"
+	if symbol == key.DOWN:
+		world.get_player(myplayerID).turn(DOWN)
+		print "turning DOWN"
+	if symbol == key.LEFT:
+		world.get_player(myplayerID).turn(LEFT)
+		print "turning LEFT"
+	if symbol == key.RIGHT:
+		world.get_player(myplayerID).turn(RIGHT)
+		print "turning RIGHT"
 
 def update(dt):
 	world.update(dt)
