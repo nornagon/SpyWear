@@ -11,7 +11,7 @@ class World:
 	def draw(self, window):
 		window.clear()
 
-		label = text.Label("internet", font_name="Georgia", font_size=36, x=500, y=500)
+		label = text.Label("FPS: %f" % clock.get_fps(), font_name="Georgia", font_size=36, x=500, y=500)
 		label.draw()
 
 		for b in self.buildings:
