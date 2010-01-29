@@ -27,9 +27,20 @@ def on_close():
 	return event.EVENT_HANDLED
 
 def update(dt):
+	d.location += 0.001
 	world.update(dt)
 
 clock.schedule(update)
+
+
+d = Dude()
+
+for i in xrange(16):
+	world.buildings.append(Building(i))
+
+world.dudes.append(d)
+
+
 
 if sys.argv[0] == '-h':
 	print "server mode"
