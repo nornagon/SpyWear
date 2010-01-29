@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
+import sys
 from pyglet import *
-from model import *
-
 import pygletreactor
 pygletreactor.install()
+from model import *
+from net import *
+
 
 from twisted.internet import reactor
 
@@ -28,6 +30,9 @@ def update(dt):
 	world.update(dt)
 
 clock.schedule(update)
+
+if sys.argv[0] == '-h':
+	print "server mode"
 
 reactor.run(call_interval=1/60.)
 #app.run()
