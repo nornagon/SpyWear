@@ -17,5 +17,8 @@ def update(dt):
 
 clock.schedule(update)
 
+for i in xrange(16):
+	world.buildings.append(Building(i))
+
 app.run()
 
