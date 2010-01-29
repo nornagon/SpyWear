@@ -2,30 +2,26 @@
 
 import sys
 from pyglet import *
-import pygletreactor
-pygletreactor.install()
 from model import *
 from net import *
 
-
 from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 
 WIDTH = 1024
 HEIGHT = 768
 
 window = window.Window(width=1024, height=768)
 
-#@window.event
-
+@window.event
 def on_draw():
 	world.draw(window)
 
 @window.event
 def on_close():
 	print "stopping"
-	app.exit()
-#	reactor.stop()
-	return event.EVENT_HANDLED
+	reactor.stop()
+	return True
 
 def update(dt):
 	d.location += 0.001
@@ -46,7 +42,19 @@ if sys.argv[1] == '-h':
 	start_server()
 
 
+if sys.argv[0] == '-h':
+	print "server mode"
+	start_server()
 
-reactor.run(call_interval=1/1000.)
-#app.run()
 
+def pygletPump():
+	clock.tick(poll=True)
+
+	for window in app.windows:
+		window.switch_to()
+		window.dispatch_events()
+		window.dispatch_event('on_draw')
+		window.flip()
+
+LoopingCall(pygletPump).start(1/60.0)
+reactor.run()
