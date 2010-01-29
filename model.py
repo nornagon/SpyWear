@@ -1,3 +1,4 @@
+from pyglet import *
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
@@ -7,24 +8,29 @@ class World:
 		self.dudes = []
 		self.players = []
 
-	def draw(self):
+	def draw(self, window):
+		window.clear()
+
+		label = text.Label("internet", font_name="Georgia", font_size=36, x=500, y=500)
+		label.draw()
+
 		for b in self.buildings:
-			b.draw()
+			b.draw(window)
 
-		for d in dudes:
-			d.draw()
+		for d in self.dudes:
+			d.draw(window)
 
-		for p in players:
-			p.draw()
+		for p in self.players:
+			p.draw(window)
 
 	def update(self, time):
 		for b in self.buildings:
 			b.update(time)
 
-		for d in dudes:
+		for d in self.dudes:
 			d.update(time)
 
-		for p in players:
+		for p in self.players:
 			p.update(time)
 
 class Building:
@@ -35,7 +41,7 @@ class Building:
 		self.colour = RED
 		self.has_bomb = False
 	
-	def draw(self):
+	def draw(self, window):
 		pass
 
 	def update(self, time):
@@ -57,7 +63,7 @@ class Dude:
 		self.outfit = HAT
 		self.colour = RED
 
-	def draw(self):
+	def draw(self, window):
 		pass
 
 	def update(self, time):
