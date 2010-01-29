@@ -2,6 +2,7 @@
 
 import sys
 from pyglet import *
+from pyglet.window import key
 from model import *
 from net import *
 import random
@@ -11,6 +12,7 @@ from twisted.internet.task import LoopingCall
 
 WIDTH = 1024
 HEIGHT = 768
+myplayerID = 0
 
 random.seed()
 
@@ -25,6 +27,17 @@ def on_close():
 	window.close()
 	reactor.stop()
 	return True
+
+@window.event
+def on_key_press(symbol, modifiers):
+        if symbol == key.UP:
+                world.get_player(myplayerID).turn(UP)
+        if symbol == key.DOWN:
+                world.get_player(myplayerID).turn(DOWN)
+        if symbol == key.LEFT:
+                world.get_player(myplayerID).turn(LEFT)
+        if symbol == key.RIGHT:
+                world.get_player(myplayerID).turn(RIGHT)
 
 def update(dt):
 	world.update(dt)

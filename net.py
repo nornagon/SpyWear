@@ -1,25 +1,45 @@
 from twisted.internet import reactor, protocol, task
+from twisted.spread import pb
 import pyglet
 from model import *
 
-class GGJServer(protocol.Protocol):
-	def dataReceived(self, data):
-		self.transport.write(data)
+PORT = 4444
+
+class GGJServer(pb.Root):
+	def __init__(self):
+		pass
+
+	def remote_login(self, name):
+		print "New client connected"
+#		return (1, world.state())
+		return 1
+
+class GGJClient:
+	def __init__(self, host):
+		print "Connecting to server:", host
+		factory = pb.PBClientFactory()
+		reactor.connectTCP(host, PORT, factory)
+		factory.getRootObject().addCallbacks(self.connected, self.failure)
+
+	def connected(self, perspective):
+		self.perspective = perspective
+		print "Connected! Wahoo!"
 	
-	def connectionMade(self):
-		self.transport.write("o hi")
+	def failure(self, failure):
+		print "Boo failure connecting to server!"
 
 def server_world():
 	"""This runs the protocol on port 4444"""
-	factory = protocol.ServerFactory()
-	factory.protocol = GGJServer
-	reactor.listenTCP(4444, factory)
 	world = local_world()
+
+	factory = pb.PBServerFactory(GGJServer())
+	reactor.listenTCP(PORT, factory)
 
 	return world
 
 
 def client_world(remote_host):
+	GGJClient(remote_host)
 	return World()
 
 def local_world():
@@ -28,7 +48,7 @@ def local_world():
 	for i in xrange(16):
 		world.buildings.append(Building(i))
 	
-	for i in xrange(20):
+	for i in xrange(1):
 		world.add_dude()
 
 	return world
