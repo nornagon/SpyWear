@@ -63,9 +63,8 @@ class Dude:
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
-	#SPEED = 0
 
-	def __init__(self, batch=None):
+	def __init__(self, batch=None, state=None):
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -81,7 +80,13 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-	
+
+		if state != None:
+			(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = state
+
+	def state(self):
+		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
@@ -123,7 +128,6 @@ class Dude:
 		else:
 			self.next_direction = new_direction
 			print "Aiming to turn to ", new_direction
-                        
 
 	def opposite(self, direction):
 		if direction == LEFT:
@@ -147,7 +151,6 @@ class Dude:
 		if left_right_path(self.path):
 			x += BUILDINGS_X * 2
 
-#		print "next intersect is", x
 		return x
 
 	def update(self, time):
@@ -170,7 +173,7 @@ class Dude:
 			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
 				# we have passed the intersect and are turning
 				print "Passed an intersect LEFT or DOWN and turning"
-                                new_path = self.next_intersect()
+				new_path = self.next_intersect()
 				self.location = PATH_INTERSECTS[self.path]
 				self.path = new_path
 				self.direction = self.next_direction

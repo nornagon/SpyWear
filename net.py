@@ -6,25 +6,32 @@ from model import *
 PORT = 4444
 
 class GGJServer(pb.Root):
-	def __init__(self):
-		pass
+	def __init__(self, world):
+		self.world = world
 
 	def remote_login(self, name):
-		print "New client connected"
-#		return (1, world.state())
-		return 1
+		print "New client connected with name", name
+		return (1, self.world.state())
+#		return 1
 
 class GGJClient:
 	def __init__(self, host):
 		print "Connecting to server:", host
 		factory = pb.PBClientFactory()
 		reactor.connectTCP(host, PORT, factory)
-		factory.getRootObject().addCallbacks(self.connected, self.failure)
+		d = factory.getRootObject().addCallbacks(self.connected, self.failure)
+		d.addCallbacks(self.got_world_state, self.failure)
+		self.deferred = d
 
 	def connected(self, perspective):
 		self.perspective = perspective
 		print "Connected! Wahoo!"
-		perspective.callRemote('login', "winnerer")
+		return perspective.callRemote('login', "winnerer")
+
+	def got_world_state(self, result):
+		print "got world state"
+		(playerId, state) = result
+		return World(state=state)
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"
@@ -33,15 +40,15 @@ def server_world():
 	"""This runs the protocol on port 4444"""
 	world = local_world()
 
-	factory = pb.PBServerFactory(GGJServer())
+	factory = pb.PBServerFactory(GGJServer(world))
 	reactor.listenTCP(PORT, factory)
 
 	return world
 
 
 def client_world(remote_host):
-	GGJClient(remote_host)
-	return World()
+	client = GGJClient(remote_host)
+	return client.deferred
 
 def local_world():
 	world = World()
