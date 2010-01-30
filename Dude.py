@@ -250,3 +250,4 @@ class Dude:
 					self.direction = self.next_direction
 			self.location = nextlocation
 
+from net import broadcast_dude_update
