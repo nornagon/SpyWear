@@ -57,9 +57,6 @@ ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
 TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
 INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
-HAT, NO_HAT = range(2)
-BLUE, YELLOW, GREEN = range(3)
-
 class Dude:
 	DUDE_OUTFITS = {
 		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat'),
@@ -90,18 +87,11 @@ class Dude:
 
 		self.shot_cooldown = 0.0
 		
-		self.has_bomb = False
+		#self.has_bomb = False
+		self.has_bomb = True
 		self.bomb_location = None
 
 		self.mission_target = None
-		self.score = 0
-
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=World.batch, group=anim.GROUND)
-		self.marker = None
-		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
-					group=anim.MARKER)
 
 		self.player_id = None
 
@@ -110,10 +100,35 @@ class Dude:
 		if state != None:
 			self.update_local_state(state)
 
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND)
+		self.marker = None
+
+		if self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
+					group=anim.MARKER)
+
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
 
 		self.workout_next_direction()
+
+	def state(self):
+		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.player_id)
+
+	def update_local_state(self, remotestate):
+		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.player_id) = remotestate
+
+		if self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
+					group=anim.MARKER)
+
+		if self.id is None:
+			self.id = id
+		elif id != self.id:
+			raise Exception("dude ID does not match!")
+
+
 
 	def xy(self):
 		if left_right_path(self.path):
@@ -128,27 +143,16 @@ class Dude:
 		return (x,y)
 
 	def reset_idle_timer(self):
-		self.idle_time = 5.0
+		self.idle_time = 20.0
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
 		print "dude", self.id, "controlled by", player_id
 		self.player_id = player_id
 		self.next_direction = self.direction
 		self.idle_time = 0.0
-		self.score = 0
 		self.stopped = False
 		if not suppressUpdate:
 			self.update_remote_state()
-
-	def state(self):
-		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id)
-
-	def update_local_state(self, remotestate):
-		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id) = remotestate
-		if self.id is None:
-			self.id = id
-		elif id != self.id:
-			raise Exception("dude ID does not match!")
 
 	def update_remote_state(self):
 		broadcast_dude_update(self.state())
@@ -299,16 +303,18 @@ class Dude:
 		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode()
-			for i in range(4):
-				if World.get_world().player_missions[i] == self.bomb_location:
+			for player in World.get_world().players:
+				if player == None:
+					continue
+
+				if player.mission_target == self.bomb_location:
 					# bomb has destroyed a mission, wipe mission for no points
-					World.get_world().player_missions[i] = None
-					World.get_world().player_missions_cooldown[i] = 7
-				if World.get_world().players[i] != None:
-					if World.get_world().dudes[i].is_in_building and World.get_world().dudes[i].building_id == self.bomb_location:
-						# a player has been caught inside the bomb blast
-						self.score += 1
-						# TODO
+					player.mission_target_bombed()
+
+				dude = player.get_dude()
+				if dude.is_in_building and dude.building_id == self.bomb_location:
+					# a player has been caught inside the bomb blast
+					self.get_player().score += 1
 			
 			self.bomb_location = None
 		
@@ -465,6 +471,12 @@ class Dude:
 
 					return
 
+	def get_player(self):
+		if self.player_id == None:
+			return None
+
+		return World.get_world().players[self.player_id]
+
 	def update(self, time):
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
@@ -496,12 +508,11 @@ class Dude:
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False
-				if World.get_world().player_missions[self.player_id] == self.building_id:
+				player = self.get_player()
+				if player != None and player.mission == Player.MISSION_BUILDING \
+						and player.mission_target == self.building_id:
 					# player has completed a mission in a building
-					print "Player ", self.player_id, " has completed a mission"
-					self.score += 1
-					World.get_world().player_missions[self.player_id] = None
-					World.get_world().player_missions_cooldown[self.player_id] = 7.0
+					player.complete_mission()
 
 				self.direction = self.old_direction
 				return

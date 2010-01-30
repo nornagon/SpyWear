@@ -7,11 +7,18 @@ PORT = 4444
 
 peers = []
 
+def broadcast_state(state, function, suppressId = None):
+	for peer in peers:
+		if not (World.is_server and suppressId != None and peer.dude_id == suppressId):
+			peer.callRemote(function, state)
+
 def broadcast_dude_update(state):
 	id = state[0]
-	for peer in peers:
-		if not World.is_server or peer.dude_id != id:
-			peer.callRemote('local_dude_state', state)
+	broadcast_state(state, 'local_dude_state', suppressId = id)
+
+def broadcast_building_explosion(state):
+	terrorist_id, building_id = state
+	broadcast_state(state, 'explode', suppressId = terrorist_id)
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
@@ -34,6 +41,12 @@ class GGJPeer(pb.Root):
 		
 		if World.is_server:
 			broadcast_dude_update(dude_state)
+
+	def remote_explode(self, state):
+		self.world.remote_explode(state)
+		
+		if World.is_server:
+			broadcast_building_explosion(state)
 
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
