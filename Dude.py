@@ -69,7 +69,7 @@ class Dude:
 		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
 		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
 	}
-	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
+	DUDE_MARKER = anim.load_anim('Rings', 18)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -95,10 +95,12 @@ class Dude:
 		self.mission_target = None
 		self.score = 9001
 
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=batch, group=anim.GROUND)
 		self.marker = None
 		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch,
+					group=anim.MARKER)
 
 		self.player_id = None
 
@@ -161,7 +163,8 @@ class Dude:
 			self.next_direction = self.direction
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=self.batch)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=self.batch, group=anim.GROUND)
 
 
 	def draw(self, window):
@@ -222,7 +225,7 @@ class Dude:
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
 			self.marker.x = self.sprite.x
-			self.marker.y = self.sprite.y + 10
+			self.marker.y = self.sprite.y
 
 
 	def forward(self):
@@ -356,7 +359,8 @@ class Dude:
 					# in a clothes store, get random clothes
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
-					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=self.batch)
+					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+							batch=self.batch, group=anim.GROUND)
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
