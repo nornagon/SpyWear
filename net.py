@@ -58,7 +58,8 @@ class GGJPeer(pb.Root):
 	def got_world_state(self, result):
 		print "got world state"
 		(self.dude_id, state) = result
-		return World(state=state)
+		self.world = World(state=state)
+		return self.world
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"
