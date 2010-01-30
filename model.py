@@ -85,6 +85,9 @@ class Player(object):
 				x = 3, y = offset_y + 180 - 3 - 4 - 52)
 
 
+		self.reveal_appearance = 0
+		self.reveal_mission = 0
+
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score)
@@ -185,6 +188,14 @@ class Player(object):
 				self.update_remote_state()
 				if self.id == World.my_player_id:
 					MISSION_ASSIGN_SOUND.play()
+
+		if self.mission_sprite and not (self.reveal_mission > 0 or self.id == World.my_player_id):
+			self.mission_sprite.visible = False
+		if not (self.reveal_appearance > 0 or self.id == World.my_player_id):
+			if self.head:
+				self.head.visible = False
+			if self.body:
+				self.body.visible = False
 
 	def update_remote_state(self):
 		broadcast_player_update(self.get_state())
