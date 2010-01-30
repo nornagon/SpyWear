@@ -55,12 +55,11 @@ LEFT, RIGHT, UP, DOWN = range(4)
 class Dude:
 	HAT, COAT, SUIT = range(3)
 
-	TURN_UP, TURN_DOWN, TURN_LEFT, TURN_RIGHT, ENTER_BUILDING = range(5)
-
 	def load_anim(path, fps):
 		jn = os.path.join
 		files = [jn('assets', path, p) for p in os.listdir(jn('assets', path))]
 		files.sort()
+		print files
 		images = [image.load(f) for f in files]
 		for img in images:
 			img.anchor_x = img.width // 2
@@ -172,44 +171,8 @@ class Dude:
 		self.update_remote_state()
 
 	def enter(self):
-		# self.path combined with location gives the building you are walking past
-		if 0.018 < self.location < 0.190:
-			building = 0
-		elif 0.281 < self.location < 0.453:
-			building = 1
-		elif 0.544 < self.location < 0.716:
-			building = 2
-		elif 0.807 < self.location < 0.979:
-			building = 3
-		else:
-			#not near a door
-			return
-		if self.path == 0 or self.path == 1:
-			nearest_building = building
-
-		elif self.path == 2 or self.path == 3:
-			nearest_building = 4 +building
-
-		elif self.path == 4 or self.path == 5:
-			nearest_building = 8 + building
-
-		elif self.path == 6 or self.path == 7:
-			nearest_building = 12 + building
-
-		elif self.path == 8 or self.path == 9:
-			nearest_building = building * 4
-			
-		elif self.path == 10 or self.path == 11:
-			nearest_building = building * 4 + 1
-			
-		elif self.path == 12 or self.path == 13:
-			nearest_building = building * 4 + 2
-			
-		elif self.path == 14 or self.path == 15:
-			nearest_building = building * 4 + 3
-		print "I am near building ", nearest_building
-		return nearest_building
-
+		pass
+		
 	def bomb(self):
 		# if in building, set bomb
 		# if bomb in play, set off bomb

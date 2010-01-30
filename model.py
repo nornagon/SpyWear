@@ -11,11 +11,14 @@ class World:
 		self.dudes_batch = graphics.Batch()
 		self.background = image.load('assets/City.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
+		self.doors = []
 
 		if state is None:
 			# init
 			for i in xrange(16):
-				self.buildings.append(Building(i))
+				building = Building(i)
+				self.buildings.append(building)
+				self.add_door(building)
 
 			for i in xrange(20):
 				self.add_dude()
@@ -24,7 +27,9 @@ class World:
 			(building_state, dude_state) = state
 
 			for i in xrange(len(building_state)):
-				self.buildings.append(Building(i, building_state[i]))
+				building = Building(i, building_state[i])
+				self.buildings.append(building)
+				self.add_door(building)
 
 			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
@@ -34,6 +39,36 @@ class World:
 		d.randomise()
 		self.dudes.append(d)
 
+	def add_door(self, building):
+		# building ID determines location
+		x = (28 + 202 * (building.id % 4))/768.
+		y = (28 + 202 * (building.id / 4))/768.
+		# door ID determines path and location float
+		doorx, doory = building.BUILDING_TYPE[self.type][1]
+		if doorx == 0:
+			# left path
+			path = (building.id % 4) * 2 + 8
+			door_location = y + doory
+			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+
+		if doorx == 1:
+			# right path
+			path = (building.id % 4) * 2 + 9
+			door_location = y + doory
+			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+
+		if doory == 0:
+			# lower path
+			path = (building.id / 4) * 2
+			door_location = x + doorx
+			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+
+		if doory == 1:
+			# upper path
+			path = (building.id / 4) * 2 + 1
+			door_location = x + doorx
+			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+                
 	def get_player(self, myplayerID):
 		return self.dudes[myplayerID]
 
@@ -76,49 +111,35 @@ class Building:
 	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 
-	SPRITES = {
-			TYPE_CLOTHES: image.load('assets/building.png'),
-			TYPE_BOMB: image.load('assets/building.png'),
-			TYPE_HOSPITAL: image.load('assets/building.png'),
-			TYPE_MUSEUM: image.load('assets/building.png'),
-			TYPE_DISCO: image.load('assets/building.png'),
-			TYPE_ARCADE: image.load('assets/building.png'),
-			TYPE_CARPARK: image.load('assets/building.png'),
-			TYPE_FACTORY: image.load('assets/building.png'),
-			TYPE_OFFICE: image.load('assets/building.png'),
-			TYPE_PARK: image.load('assets/building.png'),
-			TYPE_WAREHOUSE: image.load('assets/building.png'),
-			TYPE_BANK: image.load('assets/building.png'),
-			TYPE_RESTAURANT: image.load('assets/building.png'),
-			TYPE_TOWNHALL: image.load('assets/building.png'),
-			TYPE_RADIO: image.load('assets/building.png'),
-			TYPE_CHURCH: image.load('assets/building.png')
+	BUILDING_TYPE = {
+			TYPE_CLOTHES: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_DISCO: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_ARCADE: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CARPARK: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_FACTORY: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_OFFICE: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_PARK: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_WAREHOUSE: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_BANK: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_RESTAURANT: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_TOWNHALL: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_RADIO: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
 			}
-
-#     0  1  2        
-#    |-------|
-# 11 |       | 3
-#    |       |
-# 10 |       | 4
-#    |       |
-#  9 |       | 5
-#    |-------|
-#     8  7  6
-
-	door_locations = {
-                }
 
 	def __init__(self, id, state=None):
 		self.id = id
 		self.type = self.TYPE_CLOTHES
-		self.door_location = 0
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 
 		if state != None:
 			(self.type, self.has_bomb, self.blownup_cooldown, self.door_location) = state
 
-		self.sprite = sprite.Sprite(self.SPRITES[self.type])
+		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
 	
