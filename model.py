@@ -61,24 +61,28 @@ class World:
 			path = (building.id % 4) * 2 + 8
 			door_location = y + doory
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doorx == 1:
 			# right path
 			path = (building.id % 4) * 2 + 9
 			door_location = y + doory
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doory == 0:
 			# lower path
 			path = (building.id / 4) * 2
 			door_location = x + doorx
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doory == 1:
 			# upper path
 			path = (building.id / 4) * 2 + 1
 			door_location = x + doorx
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
                 
 	def get_player(self, myplayerID):
 		return self.dudes[myplayerID]

@@ -54,7 +54,8 @@ PATH_INTERSECTS = [path_intersect(x) for x in range(PATHS)]
 LEFT, RIGHT, UP, DOWN = range(4)
 
 class Dude:
-	HAT, COAT, SUIT = range(3)
+	HAT, SUIT = range(2)
+	BLUE, YELLOW, GREEN = range(3)
 
 	def load_anim(path, fps):
 		jn = os.path.join
@@ -81,6 +82,10 @@ class Dude:
 		self.stopped = False
 		self.outfit = self.HAT
 		self.colour = 0
+		self.is_in_building = False
+		self.building_id = None
+		self.building_direction = UP
+		self.building_cooldown = 0.0
 		
 		self.has_bomb = False
 		self.bomb_location = None
@@ -135,7 +140,41 @@ class Dude:
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
 		#self.halo.rotation = self.sprite.rotation
-		if left_right_path(self.path):
+		if self.is_in_building:
+			if self.building_cooldown > 2.:
+				# go in
+				offset = ((4. - self.building_cooldown)/2.) * 66
+				entering = True
+			else:
+				# go out
+				offset = self.building_cooldown/2. * 66
+				entering = False
+
+			if self.building_direction == UP:
+				# on a horizontal path
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + 766 * self.location
+				self.sprite.y = 1 + y + offset
+				if entering:
+					self.direction = UP
+				else:
+					self.direction = DOWN
+				
+			if self.building_direction == DOWN:
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + 766 * self.location
+				self.sprite.y = 1 + y - offset
+				if entering:
+					self.direction = DOWN
+				else:
+					self.direction = UP
+
+			if self.building_direction == LEFT:
+				pass
+			if self.building_direction == RIGHT:
+				pass
+				
+		elif left_right_path(self.path):
 			# on a horizontal path
 			y = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.y = 1 + y
@@ -156,29 +195,62 @@ class Dude:
 			return False
 
 	def turn(self, new_direction):
-		if new_direction == self.opposite(self.direction):
-			self.direction = new_direction
-			self.next_direction = new_direction
-		else:
-			self.next_direction = new_direction
+		if not self.is_in_building:
+			if new_direction == self.opposite(self.direction):
+				self.direction = new_direction
+				self.next_direction = new_direction
+			else:
+				self.next_direction = new_direction
 
-		self.stopped = False
+			self.stopped = False
 
-		self.update_remote_state()
+			self.update_remote_state()
  
 	def stopstart(self):
-		self.stopped = not self.stopped
-		self.update_remote_state()
+		if not self.is_in_building:
+			self.stopped = not self.stopped
+			self.update_remote_state()
 
 	def enter(self):
-		pass
+		if not self.is_in_building:
+			# Use self.path and self.location to see if we're near a door
+			i = 0
+			for (door_path, door_location) in World.get_world().doors:
+				if door_path == self.path and (door_location - 0.057) < self.location < door_location:
+					# Player is at a door and may enter
+					self.is_in_building = True
+					self.building_id = i
+					self.building_cooldown = 4.0
+					# Even is up or right, Odd is down or left
+					if self.path < 8 and self.path % 2 == 0:
+						# Go up
+						self.building_direction = UP
+					elif self.path < 8 and self.path % 2 == 1:
+						# Go down (on your mother)
+						self.building_direction = DOWN
+					elif self.path >= 8 and self.path % 2 == 0:
+						# Go right
+						self.building_direction = RIGHT
+					elif self.path >= 8 and self.path % 2 == 1:
+						# Go left
+						self.building_direction = LEFT
+					print "Player has entered building ", i, " going ", self.building_direction
+				i += 1
 		
 	def bomb(self):
 		# if in building, set bomb
+		if self.is_in_building and self.has_bomb:
+			self.bomb_location = self.building_id
+			print "laid bomb in building ", self.building_id
+		
 		# if bomb in play, set off bomb
-		# else error message
-		pass
-                
+		if self.bomb_location != None:
+			print "Set off bomb in building ", self.bomb_location
+			self.bomb_location = None
+		
+		# no bomb
+		else:
+			print "Player has no bomb, tried to set one off"
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -234,7 +306,31 @@ class Dude:
 	def update(self, time):
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
-
+		
+		if self.is_in_building:
+			start_time = self.building_cooldown
+			self.building_cooldown -= time
+			if start_time >= 2.0 and self.building_cooldown < 2.0:
+				# End point of building travel. Buy from shop
+				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
+					# in a clothes store, get random clothes
+					self.outfit = random.choice([self.HAT, self.SUIT])
+					self.colour = random.choice([self.BLUE, self.YELLOW, self.GREEN])
+					print "Changed clothes to ", self.outfit, self.colour
+				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
+					# in a bomb store
+					if self.has_bomb == False and self.bomb_location == None:
+						# purchase a bomb
+						self.has_bomb = True
+			if self.building_cooldown < 0:
+				print "finished in building, moving on"
+				self.is_in_building = False
+				if self.building_direction == UP or self.building_direction == DOWN:
+					self.direction = RIGHT
+				else:
+					self.direction = UP
+				return
+			return
 		if self.stopped:
 			return
 
