@@ -118,6 +118,8 @@ class Dude:
 
 		self.idle_time = 0.0
 
+		self.time_to_enter = random.random() * 20 + 3
+
 	def __init__(self, id=None, state=None):
 		self.id = id
 		self.player_id = None
@@ -621,6 +623,12 @@ class Dude:
 					self.fading = False
 					clock.schedule_once(lambda dt: self.respawn(), 5)
 			return
+
+		if World.is_server and self.player_id is None:
+			self.time_to_enter -= time
+			if self.time_to_enter <= 0:
+				self.enter()
+				self.time_to_enter = random.random() * 20 + 3
 
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
