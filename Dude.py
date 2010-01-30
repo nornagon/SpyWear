@@ -77,8 +77,7 @@ class Dude:
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
 
-	def __init__(self, id=None, state=None):
-		self.id = id
+	def reset(self):
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -102,9 +101,13 @@ class Dude:
 		self.alive = True
 		self.fading = False
 
+		self.idle_time = 0.0
+
+	def __init__(self, id=None, state=None):
+		self.id = id
 		self.player_id = None
 
-		self.idle_time = 0.0
+		self.reset()
 
 		self.marker = None
 
@@ -120,10 +123,21 @@ class Dude:
 		self.workout_next_direction()
 
 	def respawn(self):
-		self.is_in_building = True
-		self.building_id = random.randint(0,15)
-		b = World.get_world().buildings[self.building_id]
-		t = Building.BUILDING_TYPE[b.type]
+		self.reset()
+
+		# pick a door to come out of
+		building_id = random.randint(0,15)
+		self.path, self.location = World.get_world().doors[building_id]
+		if self.path >= 8:
+			self.direction = random.choice([UP,DOWN])
+		else:
+			self.direction = random.choice([LEFT,RIGHT])
+		self.next_direction = self.direction
+
+		self.random_outfit()
+		self.sprite.visible = False
+		self.enter()
+		self.building_cooldown = 2
 
 	def state(self):
 		return (self.id, self.path, self.location, self.direction,
@@ -510,6 +524,13 @@ class Dude:
 
 		return World.get_world().players[self.player_id]
 
+	def random_outfit(self):
+		self.outfit = random.choice([HAT, NO_HAT])
+		self.colour = random.choice([BLUE, YELLOW, GREEN])
+		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
+		print "Changed clothes to ", self.outfit, self.colour
+
 	def update(self, time):
 		if not self.alive:
 			if self.fading:
@@ -518,7 +539,7 @@ class Dude:
 					self.sprite.opacity = 255
 					self.sprite.visible = False
 					self.fading = False
-					clock.schedule_once(self.respawn, 5, self)
+					clock.schedule_once(lambda dt: self.respawn(), 5)
 			return
 
 		self.idle_time -= time
@@ -537,11 +558,7 @@ class Dude:
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
-					self.outfit = random.choice([HAT, NO_HAT])
-					self.colour = random.choice([BLUE, YELLOW, GREEN])
-					self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-							batch=World.batch, group=anim.GROUND))
-					print "Changed clothes to ", self.outfit, self.colour
+					self.random_outfit()
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:

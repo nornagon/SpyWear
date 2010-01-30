@@ -147,7 +147,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(20):
+			for i in xrange(2):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()
@@ -193,12 +193,14 @@ class World:
 		self.dudes.append(d)
 
 	def nearest_dude_to(self, dude):
+		if dude.is_in_building: return None
 		x1, y1 = dude.xy()
 		mindist = None
 		nearestDude = None
 		for d in self.dudes:
 			if d is dude: continue
 			if not d.alive: continue
+			if d.is_in_building: continue
 			x2, y2 = d.xy()
 			dy = y2 - y1
 			dx = x2 - x1
