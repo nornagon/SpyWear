@@ -9,7 +9,6 @@ is_server = False
 peers = []
 
 def broadcast_dude_update(state):
-	print "broadcast"
 	id = state[0]
 	for peer in peers:
 		if not is_server or peer.dude_id != id:
@@ -39,7 +38,6 @@ class GGJPeer(pb.Root):
 		
 		if is_server:
 			broadcast_dude_update(dude_state)
-			print "server broadcast"
 
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
