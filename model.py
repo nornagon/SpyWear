@@ -14,6 +14,11 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
+		crosshair = image.load('assets/crosshair.png')
+		crosshair.anchor_x = crosshair.width // 2
+		crosshair.anchor_y = crosshair.height // 2
+		self.crosshair = sprite.Sprite(crosshair)
+
 		self.players = [None, None, None, None]
 
 		if state is None:
@@ -73,6 +78,7 @@ class World:
 		mindist = None
 		nearestDude = None
 		for d in self.dudes:
+			if d is dude: continue
 			x2, y2 = d.xy()
 			dy = y2 - y1
 			dx = x2 - x1
@@ -134,6 +140,13 @@ class World:
 		for b in self.buildings:
 			b.draw(window)
 
+		player = self.get_player(World.my_player_id)
+		nearest = self.nearest_dude_to(player)
+		if nearest:
+			xy = nearest.xy()
+			self.crosshair.set_position(256 + 1 + xy[0], 1 + xy[1])
+			self.crosshair.draw()
+
 		# hud
 		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
 				font_size=24, x=0, y=7)
@@ -162,7 +175,7 @@ class Building:
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 1)),
 			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_DISCO: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_ARCADE: (image.load('assets/building.png'), (0.114, 1)),
