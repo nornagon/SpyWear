@@ -258,7 +258,6 @@ class Dude:
 #		print "workout next direction. direction:", self.direction
 		directions = self.valid_next_directions()
 #		print "valid directions:", directions
-		directions.sort()
 #		self.next_direction = directions[0]
 		self.turn(random.choice(directions))
 		self.update_remote_state()
@@ -270,33 +269,45 @@ class Dude:
 		if self.stopped:
 			return
 
-		if self.direction == RIGHT or self.direction == UP:
-			# going from 0 to 1
-			forwards = True
-			nextlocation = self.location + time * self.SPEED 
-		else:
-			# going from 1 to 0
-			forwards = False
-			nextlocation = self.location - time * self.SPEED 
+		travel = time * self.SPEED
 
-		next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
+		while (travel > 1/10000.):
+			print "travel", travel
+			if self.direction == RIGHT or self.direction == UP:
+				# going from 0 to 1
+				forwards = True
+				nextlocation = self.location + travel
+			else:
+				# going from 1 to 0
+				forwards = False
+				nextlocation = self.location - travel
 
-		if (forwards and nextlocation > next_path_intersect) \
-			or (not forwards and nextlocation < next_path_intersect):
-			if self.direction != self.next_direction:
-				# we have passed the intersect and are turning
-				new_path = self.next_intersect()
-				nextlocation = PATH_INTERSECTS[self.path]
-				self.path = new_path
-				self.direction = self.next_direction
-			if self.player_id is None and World.is_server:
-				self.workout_next_direction()
+			next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
 
-		if nextlocation < PATH_INTERSECTS[0]:
-			nextlocation = PATH_INTERSECTS[0]
-		elif nextlocation > PATH_INTERSECTS[7]:
-			nextlocation = PATH_INTERSECTS[7]
-		self.location = nextlocation   
+			if (forwards and nextlocation > next_path_intersect) \
+				or (not forwards and nextlocation < next_path_intersect):
 
+				if self.direction != self.next_direction:
+					# we have passed the intersect and are turning
+					new_path = self.next_intersect()
+					nextlocation = PATH_INTERSECTS[self.path]
+					self.path = new_path
+					self.direction = self.next_direction
+
+					if self.player_id is None and World.is_server:
+						print "workout"
+						self.workout_next_direction()
+
+				travelled = abs(self.location - nextlocation)
+				self.location = nextlocation
+				travel -= travelled
+			else:
+				self.location = nextlocation
+				travel = 0
+
+		if self.location < PATH_INTERSECTS[0]:
+			self.location = PATH_INTERSECTS[0]
+		elif self.location > PATH_INTERSECTS[7]:
+			self.location = PATH_INTERSECTS[7]
 
 from net import broadcast_dude_update
