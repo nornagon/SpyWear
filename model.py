@@ -154,13 +154,17 @@ class Player(object):
 		if self.head == None:
 			self.update_dude_sprites()
 
-		self.mission_cooldown -= time
-		if self.mission_cooldown < 0.0 and self.mission == None:
-			# no mission and cooldown's up, get a new mission
-			self.mission = self.MISSION_BUILDING
-			self.mission_target = random.choice(range(16))
-			print "Player ", self.id, " has received a mission to go to ", self.mission_target
-			self.update_mission_sprites()
+		if World.is_server:
+			self.mission_cooldown -= time
+			if self.mission_cooldown < 0.0 and self.mission == None:
+				# no mission and cooldown's up, get a new mission
+				self.mission = self.MISSION_BUILDING
+				self.mission_target = random.choice(range(16))
+				self.update_mission_sprites()
+				self.update_remote_state()
+
+	def update_remote_state(self):
+		broadcast_player_update(self.get_state())
 
 	def get_dude(self):
 		return World.get_world().dudes[self.id]
