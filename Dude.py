@@ -147,7 +147,7 @@ class Dude:
 			self.direction = random.choice([UP,DOWN])
 		else:
 			self.direction = random.choice([LEFT,RIGHT])
-		self.next_direction = self.direction
+		self.next_direction = None
 
 		self.random_outfit()
 		self.sprite.visible = False
@@ -297,7 +297,7 @@ class Dude:
 			self.marker.y = self.sprite.y
 
 			if self.next_direction != None and self.next_direction != self.direction and \
-					self.next_direction != self.opposite(self.direction):
+					self.next_direction != self.opposite(self.direction) and not self.is_in_building:
 				xrow, yrow = self.destination_row_coordinates()
 				x = PATH_INTERSECTS[xrow] * 768 + 256
 				y = PATH_INTERSECTS[yrow] * 768
@@ -626,6 +626,7 @@ class Dude:
 
 			self.building_cooldown -= time
 			if start_time >= 2.0 and self.building_cooldown < 2.0:
+				self.sprite.visible = True
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
