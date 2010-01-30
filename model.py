@@ -209,6 +209,7 @@ class Building:
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
 
 		self.explosion_sprite = None
+		self.exploding = False
 	
 	def draw(self, window):
 		self.sprite.draw()
@@ -219,16 +220,21 @@ class Building:
 		pass
 
 	def explode(self):
-		if self.explosion_sprite: return
+		if self.exploding: return
 		self.BOMB_SOUND.play()
-		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
-		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
-		self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+		self.exploding = True
+		def explosion_animation(dt):
+			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
 
-		@self.explosion_sprite.event
-		def on_animation_end():
-			del self.explosion_sprite
-			self.explosion_sprite = None
+			@self.explosion_sprite.event
+			def on_animation_end():
+				del self.explosion_sprite
+				self.explosion_sprite = None
+				self.exploding = False
+
+		clock.schedule_once(explosion_animation, 0.6)
 
 	def state(self):
 		return (self.type, self.has_bomb, self.blownup_cooldown)
