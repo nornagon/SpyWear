@@ -35,7 +35,7 @@ class GGJPeer(pb.Root):
 			raise Exception("invalid peer - must be a server or a client")
 
 	def remote_local_dude_state(self, dude_state):
-		world.update_dude(dude_state)
+		self.world.update_dude(dude_state)
 		
 		if is_server:
 			broadcast_dude_update(dude_state)
