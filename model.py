@@ -67,6 +67,12 @@ class Player(object):
 		self.death_count = 0
 		self.score = 0
 
+		self.head = None
+		self.body = None
+
+		self.mission_sprite = None
+		self.mission_target_sprite = None
+
 		if state != None:
 			self.set_state(state)
 
@@ -75,19 +81,17 @@ class Player(object):
 		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
 				x = 3, y = offset_y + 180 - 3 - 4 - 52)
 
-		self.head = None
-		self.body = None
-
-		self.mission_sprite = None
-		self.mission_target_sprite = None
 
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score)
 
 	def set_state(self, state):
+		print "player setstate", state
 		(id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score) = state
+
+		self.update_mission_sprites()
 	
 	def update_dude_sprites(self):
 		if (self.head != None):
@@ -235,7 +239,7 @@ class World:
 
 			self.dudes = [Dude(state=s) for s in dude_state]
 
-			self.set_player_state(player_state)
+			self.set_players_state(player_state)
 
 	__instance = None
 	@classmethod
@@ -365,14 +369,26 @@ class World:
 	def get_player_state(self):
 		return [p and p.get_state() or None for p in self.players]
 
+	def set_players_state(self, players):
+		for s in players:
+			self.set_player_state(s)
+	
 	def set_player_state(self, player_state):
-		for i in xrange(len(self.players)):
-			if player_state[i] != None and self.players[i] == None:
-				self.players[i] = Player(id = i, state = player_state[i])
-			elif player_state[i] == None and self.players[i] != None:
-				self.players[i] = None
-			elif player_state[i] != None and self.players[i] != None:
-				self.players[i].set_state(player_state[i])
+		print "set_player_state", player_state
+
+		if player_state == None:
+			return
+
+		id = player_state[0]
+
+		if player_state != None and self.players[id] == None:
+			self.players[id] = Player(id = id, state = player_state)
+#		elif player_state == None and self.players[i] != None:
+#			self.players[id] = None
+		elif player_state != None and self.players[id] != None:
+			self.players[id].set_state(player_state)
+
+
 
 	# For net sync
 	def state(self):
