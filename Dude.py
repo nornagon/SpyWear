@@ -98,6 +98,18 @@ class Dude:
 			raise Exception("Dude does not have an ID!")
 
 		self.workout_next_direction()
+
+	def xy(self):
+		if left_right_path(self.path):
+			# on a horizontal path
+			y = PATH_INTERSECTS[self.path] * 768
+			x = 768 * self.location
+		else:
+			# on a vertical path
+			x = PATH_INTERSECTS[self.path] * 768
+			y = 768 * self.location
+
+		return (x,y)
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
 		print "dude", self.id, "controlled by", player_id
@@ -148,12 +160,12 @@ class Dude:
 			# on a horizontal path
 			y = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.y = 1 + y
-			self.sprite.x = 256 + 1 + 766 * self.location
+			self.sprite.x = 256 + 1 + 768 * self.location
 		else:
 			# on a vertical path
 			x = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.x = 256 + 1 + x
-			self.sprite.y = 1 + 766 * self.location
+			self.sprite.y = 1 + 768 * self.location
 
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation

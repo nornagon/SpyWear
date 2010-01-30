@@ -68,6 +68,21 @@ class World:
 		d.randomise()
 		self.dudes.append(d)
 
+	def nearest_dude_to(self, dude):
+		x1, y1 = dude.xy()
+		mindist = None
+		nearestDude = None
+		for d in self.dudes:
+			x2, y2 = d.xy()
+			dy = y2 - y1
+			dx = x2 - x1
+			dist = math.sqrt(dy*dy + dx*dx)
+			if dist < 100 and (mindist is None or dist < mindist):
+				mindist = dist
+				nearestDude = d
+
+		return nearestDude
+
 	def add_door(self, building):
 		# building ID determines location
 		x = (28 + 202 * (building.id % 4))/768.
@@ -141,7 +156,7 @@ class Building:
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 1)),
 			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
@@ -159,7 +174,7 @@ class Building:
 			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
 			}
 
-	EXPLOSION = anim.load_anim('Explosion')
+	EXPLOSION = anim.load_anim('Explosion', loop=False)
 
 	def __init__(self, id, state=None):
 		self.id = id
@@ -174,25 +189,26 @@ class Building:
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
 
-		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
-		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (id % 4) + 104/2
-		self.explosion_sprite.y = 1 + 28 + 202 * (id / 4) + 104/2
-
-		self.explode_time = None
+		self.explosion_sprite = None
 	
 	def draw(self, window):
 		self.sprite.draw()
-		if self.explode_time != None:
+		if self.explosion_sprite:
 			self.explosion_sprite.draw()
 
 	def update(self, time):
-		if self.explode_time != None:
-			self.explode_time += time
-			if self.explode_time > self.EXPLOSION.get_duration():
-				self.explode_time = None
+		pass
 
 	def explode(self):
-		self.explode_time = 0
+		if self.explosion_sprite: return
+		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+		self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+
+		@self.explosion_sprite.event
+		def on_animation_end():
+			del self.explosion_sprite
+			self.explosion_sprite = None
 
 	def state(self):
 		return (self.type, self.has_bomb, self.blownup_cooldown)
