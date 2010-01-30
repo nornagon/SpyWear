@@ -44,7 +44,7 @@ class World:
 		x = (28 + 202 * (building.id % 4))/768.
 		y = (28 + 202 * (building.id / 4))/768.
 		# door ID determines path and location float
-		doorx, doory = building.BUILDING_TYPE[self.type][1]
+		doorx, doory = building.BUILDING_TYPE[building.type][1]
 		if doorx == 0:
 			# left path
 			path = (building.id % 4) * 2 + 8
