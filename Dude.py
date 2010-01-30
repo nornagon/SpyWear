@@ -57,9 +57,15 @@ class Dude:
 
 	TURN_UP, TURN_DOWN, TURN_LEFT, TURN_RIGHT, ENTER_BUILDING = range(5)
 
-	DUDE_IMG = image.load('assets/man.png')
-	DUDE_IMG.anchor_x = DUDE_IMG.width // 2
-	DUDE_IMG.anchor_y = DUDE_IMG.height // 2
+	DUDE_IMAGE_PATHS = ['assets/Guy_walking_greenJ_blond/' + p for p in
+			os.listdir('assets/Guy_walking_greenJ_blond')]
+	DUDE_IMAGE_PATHS.sort()
+	DUDE_IMGS = [image.load(p) for p in DUDE_IMAGE_PATHS]
+	for img in DUDE_IMGS:
+		img.anchor_x = img.width // 2
+		img.anchor_y = img.height // 2
+
+	DUDE_IMG = image.Animation.from_image_sequence(DUDE_IMGS, 1.0/24)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -114,15 +120,21 @@ class Dude:
 			self.next_direction = self.direction
 
 	def draw(self, window):
+		if self.direction == LEFT:
+			self.sprite.rotation = -90
+		elif self.direction == RIGHT:
+			self.sprite.rotation = 90
+		elif self.direction == UP:
+			self.sprite.rotation = 0
+		elif self.direction == DOWN:
+			self.sprite.rotation = 180
 		if left_right_path(self.path):
 			# on a horizontal path
-			self.sprite.rotation = 90
 			y = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.y = 1 + y
 			self.sprite.x = 256 + 1 + 766 * self.location
 		else:
 			# on a vertical path
-			self.sprite.rotation = 0
 			x = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.x = 256 + 1 + x
 			self.sprite.y = 1 + 766 * self.location
