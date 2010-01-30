@@ -5,22 +5,19 @@ import pyglet
 
 PORT = 4444
 
-is_server = False
 peers = []
 
 def broadcast_dude_update(state):
 	id = state[0]
 	for peer in peers:
-		if not is_server or peer.dude_id != id:
+		if not World.is_server or peer.dude_id != id:
 			peer.callRemote('local_dude_state', state)
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
-		global is_server
-		
 		if world != None:
 			self.world = world
-			is_server = True
+			World.is_server = True
 		elif host != None:
 			print "Connecting to server:", host
 			factory = pb.PBClientFactory()
@@ -28,14 +25,14 @@ class GGJPeer(pb.Root):
 			d = factory.getRootObject().addCallbacks(self.connected, self.failure)
 			d.addCallbacks(self.got_world_state, self.failure)
 			self.deferred = d
-			is_server = False
+			World.is_server = False
 		else:
 			raise Exception("invalid peer - must be a server or a client")
 
 	def remote_local_dude_state(self, dude_state):
 		self.world.update_dude(dude_state)
 		
-		if is_server:
+		if World.is_server:
 			broadcast_dude_update(dude_state)
 
 # Server function. Client calls this when it connects
