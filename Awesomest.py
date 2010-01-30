@@ -70,6 +70,8 @@ def run((playerId, _world)):
 	global myplayerID
 	myplayerID = playerId
 	World.set_world(_world)
+	global world
+	world = _world
 	LoopingCall(pygletPump).start(1/60.0)
 
 world_deferred.addCallback(run)
