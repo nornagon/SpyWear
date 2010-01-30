@@ -71,7 +71,6 @@ class Dude:
 		return image.Animation.from_image_sequence(images, 1.0/fps)
 
 	DUDE_IMG = load_anim('Guy_walking_greenJ_blond', 24)
-	#DUDE_HALO = load_anim('guy_walking_halo')
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -93,7 +92,9 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-		#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
+		self.halo = None
+		#if self.is_active_player():
+			#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
 
 		self.player_id = None
 
@@ -131,7 +132,7 @@ class Dude:
 		broadcast_dude_update(self.state())
 
 	def is_active_player(self):
-		return my_player_id == self.id
+		return World.my_player_id == self.id
 
 	def randomise(self):
 		self.location = random.random()
@@ -152,7 +153,6 @@ class Dude:
 			self.sprite.rotation = 0
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
-		#self.halo.rotation = self.sprite.rotation
 		if left_right_path(self.path):
 			# on a horizontal path
 			y = PATH_INTERSECTS[self.path] * 768.0
@@ -163,6 +163,11 @@ class Dude:
 			x = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.x = 256 + 1 + x
 			self.sprite.y = 1 + 766 * self.location
+
+		#if self.halo:
+			#self.halo.rotation = self.sprite.rotation
+			#self.halo.x = self.sprite.x
+			#self.halo.y = self.sprite.y
 
 
 	def forward(self):

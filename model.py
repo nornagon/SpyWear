@@ -2,8 +2,6 @@ import random
 from pyglet import *
 import math
 
-world = None
-
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
 class World:
@@ -27,8 +25,7 @@ class World:
 			for i in xrange(20):
 				self.add_dude()
 
-			global my_player_id
-			my_player_id = self.allocate_new_playerid()
+			World.my_player_id = self.allocate_new_playerid()
 		else:
 			# construct from given state
 			(building_state, dude_state) = state
