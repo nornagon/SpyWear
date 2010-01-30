@@ -16,7 +16,7 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
-		crosshair = image.load('assets/crosshair.png')
+		crosshair = image.load('assets/crosshair_2.png')
 		crosshair.anchor_x = crosshair.width // 2
 		crosshair.anchor_y = crosshair.height // 2
 		self.crosshair = sprite.Sprite(crosshair, batch=World.batch)
@@ -34,7 +34,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(50):
+			for i in xrange(20):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()
@@ -206,9 +206,9 @@ class Building:
 			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (0.139, 1)),
 			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1)),
 			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1)),
-			TYPE_RESTAURANT: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_TOWNHALL: (image.load('assets/Building_assets/townhall_test.png'), (0.139, 1)),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1)),
+			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1)),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', anchor_center=False, fps=8), (0.139, 1)),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', anchor_center=False, fps=2), (0.139, 1)),
 			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1)),
 			}
 
@@ -275,6 +275,8 @@ class Building:
 
 	def explode(self):
 		if self.exploding: return
+		
+		broadcast_building_explosion((World.my_player_id, self.id))
 		self.BOMB_SOUND.play()
 		self.exploding = True
 		def explosion_animation(dt):
@@ -295,3 +297,4 @@ class Building:
 		return (self.type, self.has_bomb, self.blownup_cooldown)
 
 from Dude import *
+from net import broadcast_building_explosion
