@@ -4,6 +4,8 @@ import math
 import anim
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 
 class World:
 	is_server = True
@@ -182,6 +184,12 @@ class World:
 
 	def remote_explode(self, state):
 		terrorist_id, building_id = state
+		(x,y) = self.dudes[terrorist_id].xy()
+		(myx, myy) = self.dudes[self.player_id].xy()
+		d = math.sqrt((x-myx)^2 + (y-myy)^2)
+		if d < 100:
+			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(explosion_animation, 1.0)
 
 		self.buildings[building_id].explode()
 
@@ -207,8 +215,8 @@ class Building:
 			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1)),
 			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1)),
 			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1)),
-			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', anchor_center=False, fps=8), (0.139, 1)),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', anchor_center=False, fps=2), (0.139, 1)),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (0.139, 1)),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1)),
 			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1)),
 			}
 

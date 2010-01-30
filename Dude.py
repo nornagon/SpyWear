@@ -2,6 +2,7 @@ from pyglet import *
 import random
 from model import *
 import anim
+import math
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -30,6 +31,13 @@ import anim
 BUILDINGS_X = 4
 BUILDINGS_Y = 4
 PATHS = (BUILDINGS_X + BUILDINGS_Y) * 2
+
+DOOR_OPEN_SOUND = resource.media('assets/Door Open.wav', streaming=False)
+DOOR_CLOSE_SOUND = resource.media('assets/Door Close.wav', streaming=False)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
+ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
+CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
 
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
@@ -279,6 +287,7 @@ class Dude:
 			for (door_path, door_location) in World.get_world().doors:
 				if door_path == self.path and (door_location - 0.069) < self.location < door_location:
 					# Player is at a door and may enter
+					DOOR_OPEN_SOUND.play()
 					self.is_in_building = True
 					self.building_id = i
 					self.building_cooldown = 4.0
@@ -302,6 +311,8 @@ class Dude:
 		# if in building, set bomb
 		if self.is_in_building and self.has_bomb:
 			self.bomb_location = self.building_id
+			self.has_bomb = False
+			ARM_BOMB_SOUND.play()
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
@@ -320,6 +331,8 @@ class Dude:
 						# TODO
 			
 			self.bomb_location = None
+			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(lambda dt: laugh.play(), 1.0)
 		
 		# no bomb
 		else:
@@ -491,6 +504,7 @@ class Dude:
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
+					CASH_SOUND.play()
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
 					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
@@ -505,6 +519,7 @@ class Dude:
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False
+				DOOR_CLOSE_SOUND.play()
 				if World.get_world().player_missions[self.player_id] == self.building_id:
 					# player has completed a mission in a building
 					print "Player ", self.player_id, " has completed a mission"
