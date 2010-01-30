@@ -81,6 +81,8 @@ class Dude:
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
 
+		self.idle_time = 0.0
+
 		if state != None:
 			self.update_local_state(state)
 
@@ -206,27 +208,36 @@ class Dude:
 		return x
 
 	def update(self, time):
+		self.idle_time -= time
+		if self.idle_time < 0: self.idle_time = 0
+
 		if self.stopped:
 			return
+
+		corner = False
 		if self.direction == RIGHT or self.direction == UP:
-                	# going from 0 to 1
-                        nextlocation = self.location + time * self.SPEED 
-			if nextlocation > PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
-				# we have passed the intersect and are turning
-				new_path = self.next_intersect()
-				self.location = PATH_INTERSECTS[self.path]
-				self.path = new_path
-				self.direction = self.next_direction
+			# going from 0 to 1
+			nextlocation = self.location + time * self.SPEED 
+			if nextlocation >= PATH_INTERSECTS[self.next_intersect()]:
+				corner = True
+				if self.direction != self.next_direction:
+					# we have passed the intersect and are turning
+					new_path = self.next_intersect()
+					self.location = PATH_INTERSECTS[self.path]
+					self.path = new_path
+					self.direction = self.next_direction
 			else:
 				self.location = nextlocation   
 		else:
 			# going from 1 to 0
 			nextlocation = self.location - time * self.SPEED 
-			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
-				# we have passed the intersect and are turning
-				new_path = self.next_intersect()
-				self.location = PATH_INTERSECTS[self.path]
-				self.path = new_path
-				self.direction = self.next_direction
+			if nextlocation <= PATH_INTERSECTS[self.next_intersect()]:
+				corner = True
+				if self.direction != self.next_direction:
+					# we have passed the intersect and are turning
+					new_path = self.next_intersect()
+					self.location = PATH_INTERSECTS[self.path]
+					self.path = new_path
+					self.direction = self.next_direction
 			else:
 				self.location = nextlocation   

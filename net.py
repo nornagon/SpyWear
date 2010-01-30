@@ -27,7 +27,7 @@ class GGJPeer(pb.Root):
 			raise Exception("invalid peer - must be a server or a client")
 
 	def remote_update_dude(self, id, dude_state):
-		world.dudes[id].update_state(dude_state)
+		self.world.dudes[id].update_state(dude_state)
 
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):

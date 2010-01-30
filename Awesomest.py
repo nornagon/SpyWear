@@ -34,7 +34,7 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 @window.event
 def on_key_press(symbol, modifiers):
 	if symbol in keybindings.keys():
-	       world.get_player(myplayerID).turn(keybindings[symbol])
+		world.get_player(myplayerID).turn(keybindings[symbol])
 	if symbol == key.SPACE:
 		world.get_player(myplayerID).stopstart()
 	if symbol == key.ENTER:
