@@ -58,12 +58,18 @@ TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
 INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
 class Dude:
-	HAT, SUIT = range(2)
+	HAT, NO_HAT = range(2)
 	BLUE, YELLOW, GREEN = range(3)
 
-	DUDE_IMG = anim.load_anim('Guy_walking_greenJ_blond', 24)
-	#DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
-	DUDE_MARKER = anim.load_anim('Under_Arrow', 24)
+	DUDE_OUTFITS = {
+		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat')
+		(NO_HAT, BLUE): anim.load_anim('guy_walking_blue_noHat')
+		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat')
+		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat')
+		(HAT, GREEN): anim.load_anim('guy_walking_green_hat')
+		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat')
+	}
+	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -76,7 +82,7 @@ class Dude:
 		self.next_direction = self.direction
 		self.stopped = False
 		self.outfit = self.HAT
-		self.colour = 0
+		self.colour = BLUE
 		self.is_in_building = False
 		self.building_id = None
 		self.building_direction = UP
@@ -88,10 +94,10 @@ class Dude:
 		self.mission_target = None
 		self.score = 9001
 
-		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch, group=anim.GROUND)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS(self.outfit,self.colour), batch=batch)
 		self.marker = None
 		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch, group=anim.MARKER)
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
 
 		self.player_id = None
 
@@ -162,6 +168,7 @@ class Dude:
 			self.sprite.rotation = 0
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
+		#self.halo.rotation = self.sprite.rotation
 		if self.is_in_building:
 			if self.building_cooldown > 2.:
 				# go in
@@ -210,7 +217,7 @@ class Dude:
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
 			self.marker.x = self.sprite.x
-			self.marker.y = self.sprite.y
+			self.marker.y = self.sprite.y + 10
 
 
 	def forward(self):
@@ -342,8 +349,9 @@ class Dude:
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
-					self.outfit = random.choice([self.HAT, self.SUIT])
+					self.outfit = random.choice([self.HAT, self.NO_HAT])
 					self.colour = random.choice([self.BLUE, self.YELLOW, self.GREEN])
+					
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
