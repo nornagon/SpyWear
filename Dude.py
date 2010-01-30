@@ -78,6 +78,7 @@ class Dude:
 	TURN_MARKER = image.load('assets/turn_arrow.png')
 	TURN_MARKER.anchor_x = TURN_MARKER.width // 2
 	TURN_MARKER.anchor_y = TURN_MARKER.height // 2
+	TURN_MARKER_FLIP = TURN_MARKER.texture.get_transform(flip_x = True)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/15.
@@ -221,6 +222,8 @@ class Dude:
 					group=anim.MARKER)
 			self.turn_marker = sprite.Sprite(self.TURN_MARKER, batch=World.batch, group=anim.GROUND)
 			self.turn_marker.visible = False
+			self.turn_marker_flip = sprite.Sprite(self.TURN_MARKER_FLIP, batch=World.batch, group=anim.GROUND)
+			self.turn_marker_flip.visible = False
 
 
 		if self.direction == LEFT:
@@ -284,15 +287,48 @@ class Dude:
 			self.marker.x = self.sprite.x
 			self.marker.y = self.sprite.y
 
-			if self.next_direction != None and self.next_direction != self.direction:
+			if self.next_direction != None and self.next_direction != self.direction and \
+					self.next_direction != self.opposite(self.direction):
 				xrow, yrow = self.destination_row_coordinates()
 				x = PATH_INTERSECTS[xrow] * 768 + 256
 				y = PATH_INTERSECTS[yrow] * 768
-				self.turn_marker.x = x
-				self.turn_marker.y = y
-				self.turn_marker.visible = True
+				if self.next_direction == LEFT and self.direction == DOWN:
+					m = self.turn_marker
+					m.rotation = 180
+				elif self.next_direction == UP and self.direction == LEFT:
+					m = self.turn_marker
+					m.rotation = -90
+				elif self.next_direction == DOWN and self.direction == RIGHT:
+					m = self.turn_marker
+					m.rotation = 90
+				elif self.next_direction == RIGHT and self.direction == UP:
+					m = self.turn_marker
+					m.rotation = 0
+				elif self.next_direction == RIGHT and self.direction == DOWN:
+					m = self.turn_marker_flip
+					m.rotation = 180
+				elif self.next_direction == DOWN and self.direction == LEFT:
+					m = self.turn_marker_flip
+					m.rotation = -90
+				elif self.next_direction == UP and self.direction == RIGHT:
+					m = self.turn_marker_flip
+					m.rotation = 90
+				elif self.next_direction == LEFT and self.direction == UP:
+					m = self.turn_marker_flip
+					m.rotation = 0
+				else:
+					print self.direction, self.next_direction
+
+				for b in [self.turn_marker, self.turn_marker_flip]:
+					if m is b:
+						b.visible = True
+					else:
+						b.visible = False
+				m.x = x
+				m.y = y
 			else:
 				self.turn_marker.visible = False
+				self.turn_marker_flip.visible = False
 
 
 	def forward(self):
