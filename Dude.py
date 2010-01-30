@@ -230,27 +230,26 @@ class Dude:
 		corner = False
 		if self.direction == RIGHT or self.direction == UP:
 			# going from 0 to 1
+			forwards = True
 			nextlocation = self.location + time * self.SPEED 
-			if nextlocation > PATH_INTERSECTS[self.next_intersect()]:
-				corner = True
-				if self.direction != self.next_direction:
-					# we have passed the intersect and are turning
-					new_path = self.next_intersect()
-					nextlocation = PATH_INTERSECTS[self.path]
-					self.path = new_path
-					self.direction = self.next_direction
-			self.location = nextlocation   
-		else:
+		else
 			# going from 1 to 0
+			forwards = False
 			nextlocation = self.location - time * self.SPEED 
-			if nextlocation < PATH_INTERSECTS[self.next_intersect()]:
-				corner = True
-				if self.direction != self.next_direction:
-					# we have passed the intersect and are turning
-					new_path = self.next_intersect()
-					nextlocation = PATH_INTERSECTS[self.path]
-					self.path = new_path
-					self.direction = self.next_direction
-			self.location = nextlocation
+
+		next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
+
+		if (forwards and nextlocation > next_path_intersect)
+			or (not forwards and nextlocation < next_path_intersect):
+			corner = True
+			if self.direction != self.next_direction:
+				# we have passed the intersect and are turning
+				new_path = self.next_intersect()
+				nextlocation = PATH_INTERSECTS[self.path]
+				self.path = new_path
+				self.direction = self.next_direction
+
+		self.location = nextlocation   
+
 
 from net import broadcast_dude_update
