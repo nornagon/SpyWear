@@ -240,6 +240,10 @@ class Dude:
 
 		return x
 
+	ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
+	TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
+	INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
+
 	def valid_next_direction(self):
 		next_intersect_id = self.next_intersect()
 		if self.row < BUILDINGS_X * 2:
@@ -248,10 +252,6 @@ class Dude:
 			y, x = self.row, next_intersect_id
 
 		valid_directions = []
-		
-		ROT_LEFT, ROT_UP, ROT_RIGHT, ROT_DOWN = range(4)
-
-		TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT}
 
 		if x > 0:
 			valid_directions.append(ROT_LEFT)
@@ -262,7 +262,10 @@ class Dude:
 		if y < 7:
 			valid_directions.append(ROT_UP)
 
-		
+		rot_direction = TRANS[self.direction]
+		valid_directions = [((d - rot_direction) % 4) for d in valid_directions]
+
+		return [INV_TRANS[d] for d in valid_directions]
 
 
 	def update(self, time):
