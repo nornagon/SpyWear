@@ -126,6 +126,9 @@ class Dude:
 			y = 768 * self.location
 
 		return (x,y)
+
+	def reset_idle_timer(self):
+		self.idle_time = 5.0
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
 		print "dude", self.id, "controlled by", player_id
@@ -382,7 +385,7 @@ class Dude:
 		directions = self.valid_next_directions()
 #		print "valid directions:", directions
 #		self.next_direction = directions[0]
-		self.turn(random.choice(directions))
+		self.next_direction = random.choice(directions)
 		self.update_remote_state()
 
 	# do movement update.
@@ -408,17 +411,20 @@ class Dude:
 				intersect = self.next_intersect()
 
 				# ... just for debugging
-				x, y = self.destination_row_coordinates()
+#				x, y = self.destination_row_coordinates()
 #				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
 
 				if self.direction != self.next_direction:
-					self.direction = self.next_direction
-					self.location = PATH_INTERSECTS[self.path]
-					self.path = intersect
+					if self.next_direction == self.opposite(self.direction):
+						self.direction = self.next_direction
+					else:
+						self.direction = self.next_direction
+						self.location = PATH_INTERSECTS[self.path]
+						self.path = intersect
 
 				self.next_direction = None
 
-				x, y = self.destination_row_coordinates()
+#				x, y = self.destination_row_coordinates()
 #				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
 
 			if self.in_intersect() and self.next_direction == None:
@@ -429,7 +435,8 @@ class Dude:
 				else:
 					self.location -= frame_distance
 
-				if self.player_id is None and World.is_server:
+				if (self.player_id is None and World.is_server) or \
+						(self.is_active_player() and self.idle_time == 0.):
 #					print "workout"
 					self.workout_next_direction()
 
@@ -457,15 +464,6 @@ class Dude:
 						self.location -= frame_distance
 
 					return
-
-
-		if self.location < PATH_INTERSECTS[0]:
-			self.location = PATH_INTERSECTS[0]
-		elif self.location > PATH_INTERSECTS[7]:
-			self.location = PATH_INTERSECTS[7]
-
-		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
-			print "Wargh direction set wrong"
 
 	def update(self, time):
 		self.idle_time -= time
@@ -512,6 +510,15 @@ class Dude:
 			return
 
 		self.movement_update_helper(time)
+
+		if self.location < PATH_INTERSECTS[0]:
+			self.location = PATH_INTERSECTS[0]
+		elif self.location > PATH_INTERSECTS[7]:
+			self.location = PATH_INTERSECTS[7]
+
+		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
+			print "Wargh direction set wrong"
+
 
 from net import broadcast_dude_update
 

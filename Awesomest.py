@@ -36,16 +36,20 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 
 @window.event
 def on_key_press(symbol, modifiers):
+	dude = world.get_player(World.my_player_id)
+
 	if symbol in keybindings.keys():
-		world.get_player(World.my_player_id).turn(keybindings[symbol])
+		dude.turn(keybindings[symbol])
 	elif symbol == key.SPACE:
-		world.get_player(World.my_player_id).stopstart()
+		dude.stopstart()
 	elif symbol == key.ENTER:
-		world.get_player(World.my_player_id).enter()
+		dude.enter()
 	elif symbol == key.B:
-		world.get_player(World.my_player_id).bomb()
+		dude.bomb()
 	elif symbol == key.V:
-		world.get_player(World.my_player_id).shoot()
+		dude.shoot()
+
+	dude.reset_idle_timer()
 
 def update(dt):
 	world.update(dt)
