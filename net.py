@@ -42,7 +42,8 @@ class GGJPeer(pb.Root):
 	def remote_login(self, name, peer):
 		print "New client connected with name", name
 		peers.append(peer)
-		peer.dude_id = self.world.allocate_new_playerid()
+		peer.dude_id = self.world.allocate_new_playerid(suppressUpdate = True)
+
 		return (peer.dude_id, self.world.state())
 
 # called on client - client has connected

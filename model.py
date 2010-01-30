@@ -33,7 +33,7 @@ class World:
 
 			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
-	def allocate_new_playerid(self):
+	def allocate_new_playerid(self, suppressUpdate=False):
 		if not None in self.players:
 			return None
 
@@ -44,7 +44,9 @@ class World:
 			return None
 
 		self.players[player_id] = player_id
-		self.dudes[player_id].take_control_by(player_id)
+		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
+
+		return player_id
 
 
 	def add_dude(self):
@@ -52,8 +54,8 @@ class World:
 		d.randomise()
 		self.dudes.append(d)
 
-	def get_player(self, my_player_id):
-		return self.dudes[my_player_id]
+	def get_player(self, player_id):
+		return self.dudes[player_id]
 
 	def draw(self, window):
 		window.clear()

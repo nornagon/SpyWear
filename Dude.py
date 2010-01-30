@@ -108,13 +108,15 @@ class Dude:
 
 		self.workout_next_direction()
 	
-	def take_control_by(self, player_id):
+	def take_control_by(self, player_id, suppressUpdate=False):
+		print "dude", self.id, "controlled by", player_id
 		self.player_id = player_id
 		self.next_direction = self.direction
 		self.idle_time = 0.0
 		self.score = 0
 		self.stopped = False
-		self.update_remote_state()
+		if not suppressUpdate:
+			self.update_remote_state()
 
 	def state(self):
 		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id)
