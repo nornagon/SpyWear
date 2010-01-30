@@ -38,7 +38,7 @@ LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
 LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
 CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
-
+KILL_SOUND = resource.media('assets/Pistol Kill.wav', streaming=False)
 
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
@@ -425,14 +425,14 @@ class Dude:
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
-		elif self.bomb_location != None:
+		elif self.bomb_location != None and self.alive:
 			print "Set off bomb in building ", self.bomb_location
-			World.get_world().buildings[self.bomb_location].explode()
+			World.get_world().buildings[self.bomb_location].explode(self.id)
 			self.has_bomb = False
+			if not (self.is_in_building and self.building_id == self.bomb_location):
+				laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
+				clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
-			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
-			clock.schedule_once(lambda dt: laugh.play(), 1.0)
-		
 		# no bomb
 		else:
 			print "Player has no bomb, tried to set one off"
@@ -442,8 +442,15 @@ class Dude:
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
 		dead_guy.die()
-		self.get_player().score += 1
-		self.shot_cooldown = 5
+		KILL_SOUND.play()
+		if dead_guy.player_id == None:
+			# Killed a Civilian
+			# TODO: Fire off a hint about self.player()
+			pass
+		else:
+			# Killed a Player
+			World.get_world().setscore(self.id)
+		self.shot_cooldown = 10
 
 	def die(self, suppress_announce=False):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
@@ -672,6 +679,7 @@ class Dude:
 						# purchase a bomb
 						print "Picked up a bomb"
 						self.has_bomb = True
+						CASH_SOUND.play()
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False
