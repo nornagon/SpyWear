@@ -13,7 +13,15 @@ class World:
 		self.background = image.load('assets/City.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 
-		if state != None:
+		if state is None:
+			# init
+			for i in xrange(16):
+				self.buildings.append(Building(i))
+
+			for i in xrange(20):
+				self.add_dude()
+		else:
+			# construct from given state
 			(building_state, dude_state) = state
 			for i in xrange(len(building_state)):
 				self.buildings.append(Building(i, building_state[i]))

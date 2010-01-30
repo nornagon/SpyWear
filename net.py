@@ -51,7 +51,7 @@ class GGJPeer(pb.Root):
 
 def server_world():
 	"""This runs the protocol on port 4444"""
-	world = local_world()
+	world = World()
 
 	factory = pb.PBServerFactory(GGJPeer(world=world))
 	reactor.listenTCP(PORT, factory)
@@ -62,17 +62,6 @@ def server_world():
 def client_world(remote_host):
 	client = GGJPeer(host=remote_host)
 	return client.deferred
-
-def local_world():
-	world = World()
-	
-	for i in xrange(16):
-		world.buildings.append(Building(i))
-	
-	for i in xrange(20):
-		world.add_dude()
-
-	return world
 
 def server_update():
 	dt = pyglet.clock.tick(poll=False)

@@ -52,6 +52,7 @@ if len(sys.argv) >= 2 and sys.argv[1] == '-h':
 elif len(sys.argv) >= 2:
 	world_deferred = defer.maybeDeferred(client_world, sys.argv[1])
 else:
+	def local_world: return World()
 	world_deferred = defer.maybeDeferred(local_world)
 
 def pygletPump():
