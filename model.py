@@ -5,6 +5,8 @@ import math
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
 class World:
+	is_server = True
+
 	def __init__(self, state = None):
 		self.buildings = []
 		self.dudes = []
