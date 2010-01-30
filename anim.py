@@ -1,10 +1,11 @@
 from pyglet import *
 import os, glob
 
-SKY = graphics.OrderedGroup(10)
-ROOF = graphics.OrderedGroup(8)
-PATH = graphics.OrderedGroup(6)
-GROUND = graphics.OrderedGroup(4)
+SKY = graphics.OrderedGroup(10) # explosions, crosshair
+ROOF = graphics.OrderedGroup(8) # building tops
+GROUND = graphics.OrderedGroup(6) # on the footpath
+MARKER = graphics.OrderedGroup(5) # dude's marker
+PATH = graphics.OrderedGroup(4) # the footpath
 
 def load_anim(path, fps=24, loop=True):
 	jn = os.path.join
