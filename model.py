@@ -193,8 +193,10 @@ class Player(object):
 			self.mission_sprite.visible = False
 		if not (self.reveal_appearance > 0 or self.id == World.my_player_id):
 			if self.head:
+#				pass
 				self.head.visible = False
 			if self.body:
+#				pass
 				self.body.visible = False
 
 	def update_remote_state(self):
