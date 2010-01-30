@@ -172,8 +172,7 @@ class Dude:
 
 	def set_sprite(self, spr):
 		if self.sprite:
-			self.sprite.visible = False
-			del self.sprite
+			self.sprite.delete()
 		self.sprite = spr
 
 	def randomise(self):
