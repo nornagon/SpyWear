@@ -23,8 +23,10 @@ class World:
 
 		if state is None:
 			# init
+			building_types = range(16)
+			random.shuffle(building_types)
 			for i in xrange(16):
-				building = Building(i)
+				building = Building(i, type=building_types[i])
 				self.buildings.append(building)
 				self.add_door(building)
 
@@ -37,7 +39,7 @@ class World:
 			(building_state, dude_state) = state
 
 			for i in xrange(len(building_state)):
-				building = Building(i, building_state[i])
+				building = Building(i, state=building_state[i])
 				self.buildings.append(building)
 				self.add_door(building)
 
@@ -195,9 +197,9 @@ class Building:
 
 	EXPLOSION = anim.load_anim('Explosion', loop=False)
 
-	def __init__(self, id, state=None):
+	def __init__(self, id, type=None, state=None):
 		self.id = id
-		self.type = self.TYPE_CLOTHES
+		self.type = self.BUILDING_TYPE[type]
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 
