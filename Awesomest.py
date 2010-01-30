@@ -81,7 +81,10 @@ def run((playerId, _world)):
 	global world
 	world = _world
 	LoopingCall(pygletPump).start(1/60.0)
-	AMBIENT_AUDIO.play().eos_action = media.ManagedSoundPlayer.EOS_LOOP
+	player = media.Player()
+	player.eos_action = 'loop'
+	player.queue(AMBIENT_AUDIO)
+	player.play()
 
 world_deferred.addCallback(run)
 reactor.run()

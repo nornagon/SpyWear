@@ -20,12 +20,16 @@ def broadcast_building_explosion(state):
 	terrorist_id, building_id = state
 	broadcast_state(state, 'explode', suppressId = terrorist_id)
 
-def broadcast_die(victim):
-	broadcast_state(victim, 'die')
+def broadcast_die(murderer, victim):
+	broadcast_state((murderer, victim), 'die', suppressId=murderer)
 
 def broadcast_player_update(state):
 	id = state[0]
 	broadcast_state(state, 'player_state')#, suppressId = id)
+
+def broadcast_hint(playerID, attr):
+	for peer in peers:
+		peer.callRemote('hint', playerID, attr)
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
@@ -55,10 +59,17 @@ class GGJPeer(pb.Root):
 		if World.is_server:
 			broadcast_building_explosion(state)
 
-	def remote_die(self, victim):
+	def remote_die(self, state):
+		(murderer, victim) = state
 		self.world.dudes[victim].die()
 		if World.is_server:
-			broadcast_die(victim)
+			broadcast_die(murderer, victim)
+
+	def remote_hint(self, playerID, attr):
+		if attr == 'appearance':
+			World.get_world().player[playerID].reveal_appearance = 5
+		elif attr == 'mission':
+			World.get_world().player[playerID].reveal_mission = 5
 
 	def remote_player_state(self, state):
 		self.world.set_player_state(state)
