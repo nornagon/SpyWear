@@ -66,6 +66,14 @@ class Dude:
 		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
 		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
 	}
+	DUDE_DEATHS = {
+		(HAT, BLUE): anim.load_anim('guy_dieing_blue_hat', loop=False),
+		(NO_HAT, BLUE): anim.load_anim('guy_dieing_blue_noHat', loop=False),
+		(HAT, YELLOW): anim.load_anim('guy_dieing_yellow_noHat', loop=False),
+		(NO_HAT, YELLOW): anim.load_anim('guy_dieing_yellow_hat', loop=False),
+		(HAT, GREEN): anim.load_anim('guy_walking_green_hat', loop=False),
+		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat', loop=False),
+	}
 	DUDE_MARKER = anim.load_anim('Rings', 18)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
@@ -92,6 +100,8 @@ class Dude:
 		self.bomb_location = None
 
 		self.mission_target = None
+
+		self.alive = True
 
 		self.player_id = None
 
@@ -160,6 +170,12 @@ class Dude:
 	def is_active_player(self):
 		return World.my_player_id == self.id
 
+	def set_sprite(self, spr):
+		if self.sprite:
+			self.sprite.visible = False
+			del self.sprite
+		self.sprite = spr
+
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
@@ -171,9 +187,9 @@ class Dude:
 			self.next_direction = self.direction
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=World.batch, group=anim.GROUND)
 
+		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
 
 		self.workout_next_direction()
 
@@ -325,6 +341,12 @@ class Dude:
 	def shoot(self):
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
+		dead_guy.die()
+
+	def die(self):
+		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
+		self.alive = False
 
 	def opposite(self, direction):
 		if direction == LEFT:
@@ -478,6 +500,9 @@ class Dude:
 		return World.get_world().players[self.player_id]
 
 	def update(self, time):
+		if not self.alive:
+			return
+
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
 
@@ -496,8 +521,8 @@ class Dude:
 					# in a clothes store, get random clothes
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
-					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-							batch=World.batch, group=anim.GROUND)
+					self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+							batch=World.batch, group=anim.GROUND))
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
