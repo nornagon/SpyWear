@@ -399,7 +399,7 @@ class Building:
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (UP, 0.5),
+			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (DOWN, 0.5),
 				image.load('assets/Building_Icons/clothes_icon.png')),
 			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/bomb_icon.png')),
@@ -407,13 +407,13 @@ class Building:
 				image.load('assets/Building_Icons/hospital_icon.png')),
 			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/museum_icon.png')),
-			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (UP, 0.5),
+			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (DOWN, 0.5),
 				image.load('assets/Building_Icons/club_icon.png')),
 			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/arcade_icon.png')),
 			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/parking_icon.png')),
-			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (UP, 0.5),
+			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (DOWN, 0.5),
 				image.load('assets/Building_Icons/factory_icon.png')),
 			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (UP, 0.5),
 				None),
@@ -422,7 +422,7 @@ class Building:
 				image.load('assets/Building_Icons/park_icon.png')),
 			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/warehouse_icon.png')),
-			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (UP, 0.5),
+			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (DOWN, 0.5),
 				image.load('assets/Building_Icons/bank_icon.png')),
 			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/cafe_icon.png')),
