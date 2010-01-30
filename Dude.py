@@ -253,4 +253,4 @@ class Dude:
 
 
 
-#from net import broadcast_dude_update
+from net import broadcast_dude_update
