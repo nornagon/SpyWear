@@ -457,6 +457,11 @@ class Building:
 	def update(self, time):
 		pass
 
+	def screen_coords(self):
+		x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+		y = 1 + 28 + 202 * (self.id / 4) + 104/2
+		return (x,y)
+
 	def explode(self):
 		if self.exploding: return
 		
@@ -466,8 +471,7 @@ class Building:
 		def explosion_animation(dt):
 			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY,
 					batch=World.batch)
-			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
-			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+			self.explosion_sprite.x, self.explosion_sprite.y = self.screen_coords()
 
 			for player in World.get_world().players:
 				if player == None:

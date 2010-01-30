@@ -74,6 +74,8 @@ class Dude:
 	}
 	DUDE_MARKER = anim.load_anim('Rings', 18)
 
+	BOMB_MARKER = anim.load_anim('Bomb_Marker', 12)
+
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/15.
 
@@ -332,6 +334,18 @@ class Dude:
 		# if in building, set bomb
 		if self.is_in_building and self.has_bomb:
 			self.bomb_location = self.building_id
+			self.bomb_marker = sprite.Sprite(self.BOMB_MARKER, batch=World.batch,
+					group=anim.SKY)
+			self.bomb_marker.x, self.bomb_marker.y = World.get_world().buildings[self.bomb_location].screen_coords()
+			def do_fade(dt):
+				self.bomb_marker.opacity -= 300*dt
+				if self.bomb_marker.opacity <= 0:
+					self.bomb_marker.delete()
+					self.bomb_marker = None
+					clock.unschedule(do_fade)
+			def start_fade(dt):
+				clock.schedule_interval(do_fade, 1/60.0)
+			clock.schedule_once(start_fade, 1.5)
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
