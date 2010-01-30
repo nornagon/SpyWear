@@ -21,7 +21,7 @@ class GGJPeer(pb.Root):
 		
 		if world != None:
 			self.world = world
-			self.unused_player_ids = range(len(self.world.dudes))
+			self.unused_player_ids = range(1, len(self.world.dudes))
 			is_server = True
 		elif host != None:
 			print "Connecting to server:", host
