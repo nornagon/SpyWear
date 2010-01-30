@@ -47,7 +47,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			self.dudes = [Dude(batch=World.batch, state=s) for s in dude_state]
+			self.dudes = [Dude(state=s) for s in dude_state]
 
 	__instance = None
 	@classmethod
@@ -179,6 +179,11 @@ class World:
 
 	def update_dude(self, dude_state):
 		self.dudes[dude_state[0]].update_local_state(dude_state)
+
+	def remote_explode(self, state):
+		terrorist_id, building_id = state
+
+		self.buildings[building_id].explode()
 
 class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
