@@ -156,10 +156,9 @@ class Player(object):
 		return 768 - ((self.id + 1) * 180)
 
 	def draw_hud(self):
-		self.background.blit(0, offset_y)
+		self.background.blit(0, self.get_offset_y())
 
 		self.batch.draw()
-
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"

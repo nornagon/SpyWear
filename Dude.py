@@ -77,7 +77,7 @@ class Dude:
 	DUDE_MARKER = anim.load_anim('Rings', 18)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
-	SPEED = 1/20.
+	SPEED = 1/15.
 
 	def __init__(self, id=None, state=None):
 		self.id = id
