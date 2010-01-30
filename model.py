@@ -207,8 +207,8 @@ class Building:
 			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1)),
 			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1)),
 			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1)),
-			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', anchor_center=False, fps=8), (0.139, 1)),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', anchor_center=False, fps=2), (0.139, 1)),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (0.139, 1)),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1)),
 			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1)),
 			}
 
