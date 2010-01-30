@@ -39,8 +39,7 @@ class Player(object):
 	BOMB_ICONS = (image.load('assets/Lower Hud/bomb_icon_grey.png'),
 			image.load('assets/Lower Hud/bomb_icon_black.png'))
 
-	background = image.SolidColorImagePattern(color=(255, 255, 255, 255))\
-			.create_image(256, 180)
+	background = image.load('assets/New Hud/hud_background.png')
 
 	def __init__(self, id, state = None):
 		self.id = id
@@ -85,6 +84,7 @@ class Player(object):
 		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
 				x = 3, y = offset_y + 180 - 3 - 4 - 52)
 
+		self.background_sprite = sprite.Sprite(self.background, x = 0, y = offset_y)
 
 		self.reveal_appearance = 0
 		self.reveal_mission = 0
@@ -231,7 +231,7 @@ class Player(object):
 		return 768 - ((self.id + 1) * 180)
 
 	def draw_hud(self):
-		self.background.blit(0, self.get_offset_y())
+		self.background_sprite.draw()
 
 		self.batch.draw()
 
@@ -279,7 +279,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(20):
+			for i in xrange(3):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()

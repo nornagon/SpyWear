@@ -181,6 +181,7 @@ class Dude:
 		self.sprite.visible = False
 		self.enter()
 		self.building_cooldown = 2.
+		self.update_remote_state()
 
 	def xy(self):
 		if left_right_path(self.path):
@@ -441,11 +442,12 @@ class Dude:
 		if self.shot_cooldown > 0: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
+		broadcast_die(World.my_player_id, dead_guy.id)
 		dead_guy.die()
 		self.get_player().score += 1
 		self.shot_cooldown = 5
 
-	def die(self, suppress_announce=False):
+	def die(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		@self.sprite.event
@@ -698,5 +700,5 @@ class Dude:
 			print "Wargh direction set wrong"
 
 
-from net import broadcast_dude_update
+from net import broadcast_dude_update, broadcast_die
 
