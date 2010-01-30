@@ -272,7 +272,6 @@ class Dude:
 		travel = time * self.SPEED
 
 		while (travel > 1/10000.):
-			print "travel", travel
 			if self.direction == RIGHT or self.direction == UP:
 				# going from 0 to 1
 				forwards = True
