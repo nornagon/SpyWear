@@ -201,8 +201,8 @@ class Dude:
 					self.direction = UP
 				else:
 					self.direction = DOWN
-				
-			if self.building_direction == DOWN:
+
+			elif self.building_direction == DOWN:
 				y = PATH_INTERSECTS[self.path] * 768.0
 				self.sprite.x = 256 + 1 + 766 * self.location
 				self.sprite.y = 1 + y - offset
@@ -211,6 +211,7 @@ class Dude:
 				else:
 					self.direction = UP
 
+			# TODO
 			if self.building_direction == LEFT:
 				pass
 			if self.building_direction == RIGHT:
@@ -260,6 +261,7 @@ class Dude:
 
 	def enter(self):
 		if not self.is_in_building:
+			self.old_direction = self.direction
 			# Use self.path and self.location to see if we're near a door
 			i = 0
 			for (door_path, door_location) in World.get_world().doors:
@@ -369,6 +371,9 @@ class Dude:
 			self.shot_cooldown -= time
 			if self.shot_cooldown < 0:
 				self.shot_cooldown = 0
+
+		#if (self.path >= 8) != (self.direction == UP or self.direction == DOWN):
+			#print 'warning! warning!'
 		
 		if self.is_in_building:
 			start_time = self.building_cooldown
@@ -391,10 +396,7 @@ class Dude:
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False
-				if self.building_direction == UP or self.building_direction == DOWN:
-					self.direction = RIGHT
-				else:
-					self.direction = UP
+				self.direction = self.old_direction
 				return
 			return
 		if self.stopped:
