@@ -2,6 +2,7 @@ from pyglet import *
 import random
 from model import *
 import anim
+import math
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -30,6 +31,14 @@ import anim
 BUILDINGS_X = 4
 BUILDINGS_Y = 4
 PATHS = (BUILDINGS_X + BUILDINGS_Y) * 2
+
+DOOR_OPEN_SOUND = resource.media('assets/Door Open.wav', streaming=False)
+DOOR_CLOSE_SOUND = resource.media('assets/Door Close.wav', streaming=False)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
+ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
+CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
+
 
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
@@ -72,7 +81,13 @@ class Dude:
 		(HAT, GREEN): anim.load_anim('guy_dieing_green_hat', loop=False),
 		(NO_HAT, GREEN): anim.load_anim('guy_dieing_green_noHat', loop=False),
 	}
+
 	DUDE_MARKER = anim.load_anim('Rings', 18)
+	BOMB_MARKER = anim.load_anim('Bomb_Marker', 12)
+	TURN_MARKER = image.load('assets/turn_arrow.png')
+	TURN_MARKER.anchor_x = TURN_MARKER.width // 2
+	TURN_MARKER.anchor_y = TURN_MARKER.height // 2
+	TURN_MARKER_FLIP = TURN_MARKER.texture.get_transform(flip_x = True)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/15.
@@ -221,6 +236,11 @@ class Dude:
 		if not self.marker and self.is_active_player():
 			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
 					group=anim.MARKER)
+			self.turn_marker = sprite.Sprite(self.TURN_MARKER, batch=World.batch, group=anim.GROUND)
+			self.turn_marker.visible = False
+			self.turn_marker_flip = sprite.Sprite(self.TURN_MARKER_FLIP, batch=World.batch, group=anim.GROUND)
+			self.turn_marker_flip.visible = False
+
 
 		effective_direction = self.direction
 		if self.is_in_building:
@@ -262,21 +282,65 @@ class Dude:
 			if self.building_direction == RIGHT:
 				pass
 				
-		elif left_right_path(self.path):
-			# on a horizontal path
-			y = PATH_INTERSECTS[self.path] * 768.0
-			self.sprite.y = 1 + y
-			self.sprite.x = 256 + 1 + 768 * self.location
 		else:
-			# on a vertical path
-			x = PATH_INTERSECTS[self.path] * 768.0
-			self.sprite.x = 256 + 1 + x
-			self.sprite.y = 1 + 768 * self.location
+			if left_right_path(self.path):
+				# on a horizontal path
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.y = 1 + y
+				self.sprite.x = 256 + 1 + 768 * self.location
+			else:
+				# on a vertical path
+				x = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + x
+				self.sprite.y = 1 + 768 * self.location
 
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
 			self.marker.x = self.sprite.x
 			self.marker.y = self.sprite.y
+
+			if self.next_direction != None and self.next_direction != self.direction and \
+					self.next_direction != self.opposite(self.direction):
+				xrow, yrow = self.destination_row_coordinates()
+				x = PATH_INTERSECTS[xrow] * 768 + 256
+				y = PATH_INTERSECTS[yrow] * 768
+				if self.next_direction == LEFT and self.direction == DOWN:
+					m = self.turn_marker
+					m.rotation = 180
+				elif self.next_direction == UP and self.direction == LEFT:
+					m = self.turn_marker
+					m.rotation = -90
+				elif self.next_direction == DOWN and self.direction == RIGHT:
+					m = self.turn_marker
+					m.rotation = 90
+				elif self.next_direction == RIGHT and self.direction == UP:
+					m = self.turn_marker
+					m.rotation = 0
+				elif self.next_direction == RIGHT and self.direction == DOWN:
+					m = self.turn_marker_flip
+					m.rotation = 180
+				elif self.next_direction == DOWN and self.direction == LEFT:
+					m = self.turn_marker_flip
+					m.rotation = -90
+				elif self.next_direction == UP and self.direction == RIGHT:
+					m = self.turn_marker_flip
+					m.rotation = 90
+				elif self.next_direction == LEFT and self.direction == UP:
+					m = self.turn_marker_flip
+					m.rotation = 0
+				else:
+					print self.direction, self.next_direction
+
+				for b in [self.turn_marker, self.turn_marker_flip]:
+					if m is b:
+						b.visible = True
+					else:
+						b.visible = False
+				m.x = x
+				m.y = y
+			else:
+				self.turn_marker.visible = False
+				self.turn_marker_flip.visible = False
 
 
 	def forward(self):
@@ -311,6 +375,7 @@ class Dude:
 			for (door_path, door_location) in World.get_world().doors:
 				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039:
 					# Player is at a door and may enter
+					DOOR_OPEN_SOUND.play()
 					self.is_in_building = True
 					self.building_id = i
 					self.building_cooldown = 4.0
@@ -335,26 +400,31 @@ class Dude:
 		# if in building, set bomb
 		if self.is_in_building and self.has_bomb:
 			self.bomb_location = self.building_id
+			self.bomb_marker = sprite.Sprite(self.BOMB_MARKER, batch=World.batch,
+					group=anim.SKY)
+			self.bomb_marker.x, self.bomb_marker.y = World.get_world().buildings[self.bomb_location].screen_coords()
+			def do_fade(dt):
+				self.bomb_marker.opacity -= 300*dt
+				if self.bomb_marker.opacity <= 0:
+					self.bomb_marker.delete()
+					self.bomb_marker = None
+					clock.unschedule(do_fade)
+			def start_fade(dt):
+				clock.schedule_interval(do_fade, 1/60.0)
+			clock.schedule_once(start_fade, 1.5)
+
+			self.has_bomb = False
+			ARM_BOMB_SOUND.play()
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
 		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode()
-			for player in World.get_world().players:
-				if player == None:
-					continue
-
-				if player.mission_target == self.bomb_location:
-					# bomb has destroyed a mission, wipe mission for no points
-					player.mission_target_bombed()
-
-				dude = player.get_dude()
-				if dude.is_in_building and dude.building_id == self.bomb_location:
-					# a player has been caught inside the bomb blast
-					self.get_player().score += 1
-			
+			self.has_bomb = False
 			self.bomb_location = None
+			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(lambda dt: laugh.play(), 1.0)
 		
 		# no bomb
 		else:
@@ -368,8 +438,7 @@ class Dude:
 		self.get_player().score += 1
 		self.shot_cooldown = 5
 
-	def die(self):
-		print "some dude way died"
+	def die(self, suppress_announce=False):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		@self.sprite.event
@@ -493,7 +562,8 @@ class Dude:
 					self.location -= frame_distance
 
 				if (self.player_id is None and World.is_server) or \
-						(self.is_active_player() and self.idle_time == 0.):
+						(self.is_active_player() and (self.idle_time == 0. or \
+							(not self.direction in self.valid_next_directions()))):
 #					print "workout"
 					self.workout_next_direction()
 
@@ -571,6 +641,9 @@ class Dude:
 					if self.am_incharge():
 						self.random_outfit()
 
+					if self.is_active_player():
+						CASH_SOUND.play()
+
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:
@@ -581,8 +654,8 @@ class Dude:
 				print "finished in building, moving on"
 				self.is_in_building = False
 				player = self.get_player()
-				if player != None and player.mission == Player.MISSION_BUILDING \
-						and player.mission_target == self.building_id:
+				DOOR_CLOSE_SOUND.play()
+				if World.get_world().player_missions[self.player_id] == self.building_id:
 					# player has completed a mission in a building
 					player.complete_mission()
 

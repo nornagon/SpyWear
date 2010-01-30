@@ -184,6 +184,11 @@ class Player(object):
 		self.mission = None
 		self.mission_cooldown = 7.
 
+
+COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
+
 class World:
 	is_server = True
 	batch = graphics.Batch()
@@ -376,6 +381,12 @@ class World:
 
 	def remote_explode(self, state):
 		terrorist_id, building_id = state
+		(x,y) = self.dudes[terrorist_id].xy()
+		(myx, myy) = self.dudes[self.player_id].xy()
+		d = math.sqrt((x-myx)^2 + (y-myy)^2)
+		if d < 100:
+			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(explosion_animation, 1.0)
 
 		self.buildings[building_id].explode()
 
@@ -484,6 +495,11 @@ class Building:
 	def update(self, time):
 		pass
 
+	def screen_coords(self):
+		x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+		y = 1 + 28 + 202 * (self.id / 4) + 104/2
+		return (x,y)
+
 	def explode(self):
 		if self.exploding: return
 		
@@ -493,8 +509,21 @@ class Building:
 		def explosion_animation(dt):
 			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY,
 					batch=World.batch)
-			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
-			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+			self.explosion_sprite.x, self.explosion_sprite.y = self.screen_coords()
+
+			for player in World.get_world().players:
+				if player == None:
+					continue
+
+				if player.mission_target == self.id:
+					# bomb has destroyed a mission, wipe mission for no points
+					player.mission_target_bombed()
+
+				dude = player.get_dude()
+				if dude.is_in_building and dude.building_id == self.bomb_location:
+					# a player has been caught inside the bomb blast
+					self.get_player().score += 1
+					dude.die(supress_announce=not is_server)
 
 			@self.explosion_sprite.event
 			def on_animation_end():
