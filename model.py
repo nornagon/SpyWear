@@ -6,7 +6,7 @@ import anim
 BLUE, YELLOW, GREEN = range(3)
 HAT, NO_HAT = range(2)
 
-class Player:
+class Player(object):
 	FLAG_SOVIET, FLAG_UK, FLAG_US, FLAG_GERM = range(4)
 
 	FLAG_ICONS = {FLAG_SOVIET: image.load('assets/Hud/Flags/sov_flag_w.png'),
@@ -34,13 +34,37 @@ class Player:
 	background = image.SolidColorImagePattern(color=(255, 255, 255, 255))\
 			.create_image(256, 180)
 
-
 	def __init__(self, id):
 		self.id = id
 		self.mission = None
 		self.mission_target = None
 		self.mission_cooldown = 5.0
+
+		self.death_count = 0
+		self.name = "fdsa"
+
+		self._score = 0
+
+		self.name_label = text.Label(text = self.name,\
+				font_name="Courier New", font_size=20, bold=True,\
+				color=(0,0,0,255), halign='center',\
+				x = 3, y = self.get_offset_y() + 3, width = 140, height = 40)
+
+		self.score_label = text.Label(\
+				font_name="Arial Black", font_size=18,\
+				color=(0,0,0,255), halign='center',\
+				x = 150, y = self.get_offset_y() + 3, width = 103, height = 40)
+
 		self.score = 0
+
+	def getscore(self):
+		return self._score
+
+	def setscore(self, value):
+		self._score = value
+		self.score_label.text = "S: " + str(value)
+
+	score = property(getscore, setscore)
 
 	def update(self, time):
 		self.mission_cooldown -= time
@@ -53,8 +77,11 @@ class Player:
 	def get_dude(self):
 		return World.get_world().dudes[self.id]
 
+	def get_offset_y(self):
+		return 768 - ((self.id + 1) * 180)
+
 	def draw_hud(self):
-		offset_y = 768 - ((self.id + 1) * 180)
+		offset_y = self.get_offset_y()
 
 		self.background.blit(0, offset_y)
 
@@ -73,6 +100,9 @@ class Player:
 
 		self.HEAD_ICONS[dude.colour][head].blit(94 + 60 + 7, offset_y + 180 - 3 - 43)
 		self.BODY_ICONS[dude.colour].blit(94 + 60 + 7, offset_y + 180 - 3 - 43 - 84)
+
+		self.name_label.draw()
+		self.score_label.draw()
 
 # x = 94
 
