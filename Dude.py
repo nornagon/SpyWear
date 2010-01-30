@@ -57,17 +57,17 @@ ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
 TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
 INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
-class Dude:
-	HAT, NO_HAT = range(2)
-	BLUE, YELLOW, GREEN = range(3)
+HAT, NO_HAT = range(2)
+BLUE, YELLOW, GREEN = range(3)
 
+class Dude:
 	DUDE_OUTFITS = {
-		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat')
-		(NO_HAT, BLUE): anim.load_anim('guy_walking_blue_noHat')
-		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat')
-		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat')
-		(HAT, GREEN): anim.load_anim('guy_walking_green_hat')
-		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat')
+		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat'),
+		(NO_HAT, BLUE): anim.load_anim('guy_walking_blue_noHat'),
+		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat'),
+		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat'),
+		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
+		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
 	}
 	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
 
@@ -81,7 +81,7 @@ class Dude:
 		self.direction = RIGHT
 		self.next_direction = self.direction
 		self.stopped = False
-		self.outfit = self.HAT
+		self.outfit = HAT
 		self.colour = BLUE
 		self.is_in_building = False
 		self.building_id = None
@@ -94,7 +94,7 @@ class Dude:
 		self.mission_target = None
 		self.score = 9001
 
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS(self.outfit,self.colour), batch=batch)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
 		self.marker = None
 		if self.is_active_player():
 			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
