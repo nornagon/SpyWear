@@ -88,10 +88,14 @@ class Player(object):
 
 	def set_state(self, state):
 		print "player setstate", state
+		oldmission = self.mission
+		oldmission_target = self.mission_target
+
 		(id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score) = state
 
-		self.update_mission_sprites()
+		if oldmission != self.mission or oldmission_target != self.mission_target:
+			self.clear_mission_sprites()
 	
 	def update_dude_sprites(self):
 		if (self.head != None):
@@ -115,7 +119,7 @@ class Player(object):
 		self.body = sprite.Sprite(self.BODY_ICONS[dude.colour], batch = self.batch,
 				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43 - 84)
 
-	def update_mission_sprites(self):
+	def clear_mission_sprites(self):
 		if (self.mission_sprite != None):
 			self.mission_sprite.delete()
 			self.mission_sprite = None
@@ -123,6 +127,10 @@ class Player(object):
 		if (self.mission_target_sprite != None):
 			self.mission_target_sprite.delete()
 			self.mission_target_sprite = None
+
+
+	def update_mission_sprites(self):
+		self.clear_mission_sprites()
 
 		if self.mission != None:
 			offset_y = self.get_offset_y()
@@ -157,6 +165,9 @@ class Player(object):
 	def update(self, time):
 		if self.head == None:
 			self.update_dude_sprites()
+
+		if self.mission_sprite == None and self.mission != None:
+			self.update_mission_sprites()
 
 		if World.is_server:
 			self.mission_cooldown -= time
