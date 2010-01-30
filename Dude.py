@@ -655,7 +655,8 @@ class Dude:
 				self.is_in_building = False
 				player = self.get_player()
 				DOOR_CLOSE_SOUND.play()
-				if World.get_world().player_missions[self.player_id] == self.building_id:
+				if player != None and player.mission == Player.MISSION_BUILDING \
+						and player.mission_target == self.building_id:
 					# player has completed a mission in a building
 					player.complete_mission()
 
