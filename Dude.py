@@ -1,7 +1,7 @@
 from pyglet import *
 import random
 from model import *
-import glob, os
+import anim
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -60,17 +60,8 @@ INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 class Dude:
 	HAT, COAT, SUIT = range(3)
 
-	def load_anim(path, fps):
-		jn = os.path.join
-		files = glob.glob(jn('assets', path, '*.png'))
-		files.sort()
-		images = [image.load(f) for f in files]
-		for img in images:
-			img.anchor_x = img.width // 2
-			img.anchor_y = img.height // 2
-		return image.Animation.from_image_sequence(images, 1.0/fps)
-
-	DUDE_IMG = load_anim('Guy_walking_greenJ_blond', 24)
+	DUDE_IMG = anim.load_anim('Guy_walking_greenJ_blond', 24)
+	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -92,9 +83,9 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-		self.halo = None
-		#if self.is_active_player():
-			#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
+		self.marker = None
+		if self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
 
 		self.player_id = None
 
@@ -164,10 +155,10 @@ class Dude:
 			self.sprite.x = 256 + 1 + x
 			self.sprite.y = 1 + 766 * self.location
 
-		#if self.halo:
-			#self.halo.rotation = self.sprite.rotation
-			#self.halo.x = self.sprite.x
-			#self.halo.y = self.sprite.y
+		if self.marker:
+			self.marker.rotation = self.sprite.rotation
+			self.marker.x = self.sprite.x
+			self.marker.y = self.sprite.y + 10
 
 
 	def forward(self):

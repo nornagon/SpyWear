@@ -1,6 +1,7 @@
 import random
 from pyglet import *
 import math
+import anim
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
@@ -158,6 +159,8 @@ class Building:
 			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
 			}
 
+	EXPLOSION = anim.load_anim('Explosion')
+
 	def __init__(self, id, state=None):
 		self.id = id
 		self.type = self.TYPE_CLOTHES
@@ -170,12 +173,26 @@ class Building:
 		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
+
+		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (id % 4) + 104/2
+		self.explosion_sprite.y = 1 + 28 + 202 * (id / 4) + 104/2
+
+		self.explode_time = None
 	
 	def draw(self, window):
 		self.sprite.draw()
+		if self.explode_time != None:
+			self.explosion_sprite.draw()
 
 	def update(self, time):
-		pass
+		if self.explode_time != None:
+			self.explode_time += time
+			if self.explode_time > self.EXPLOSION.get_duration():
+				self.explode_time = None
+
+	def explode(self):
+		self.explode_time = 0
 
 	def state(self):
 		return (self.type, self.has_bomb, self.blownup_cooldown)

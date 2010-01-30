@@ -39,6 +39,7 @@ def on_key_press(symbol, modifiers):
 	if symbol in keybindings.keys():
 		world.get_player(World.my_player_id).turn(keybindings[symbol])
 	if symbol == key.SPACE:
+		random.choice(world.buildings).explode()
 		world.get_player(World.my_player_id).stopstart()
 	if symbol == key.ENTER:
 		world.get_player(World.my_player_id).enter()
