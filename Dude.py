@@ -71,8 +71,8 @@ class Dude:
 		(NO_HAT, BLUE): anim.load_anim('guy_dieing_blue_noHat', loop=False),
 		(HAT, YELLOW): anim.load_anim('guy_dieing_yellow_noHat', loop=False),
 		(NO_HAT, YELLOW): anim.load_anim('guy_dieing_yellow_hat', loop=False),
-		(HAT, GREEN): anim.load_anim('guy_walking_green_hat', loop=False),
-		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat', loop=False),
+		(HAT, GREEN): anim.load_anim('guy_dieing_green_hat', loop=False),
+		(NO_HAT, GREEN): anim.load_anim('guy_dieing_green_noHat', loop=False),
 	}
 	DUDE_MARKER = anim.load_anim('Rings', 18)
 
