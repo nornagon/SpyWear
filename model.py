@@ -1,8 +1,7 @@
 import random
 from pyglet import *
 import math
-
-world = None
+import anim
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
@@ -15,6 +14,8 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
+		self.players = [None, None, None, None]
+
 		if state is None:
 			# init
 			for i in xrange(16):
@@ -24,6 +25,8 @@ class World:
 
 			for i in xrange(20):
 				self.add_dude()
+
+			World.my_player_id = self.allocate_new_playerid()
 		else:
 			# construct from given state
 			(building_state, dude_state) = state
@@ -44,11 +47,41 @@ class World:
 	def set_world(cls, world):
 		cls.__instance = world
 
+	def allocate_new_playerid(self, suppressUpdate=False):
+		if not None in self.players:
+			return None
+
+		player_id = self.players.index(None)
+
+		if player_id > len(self.dudes):
+			print "No dudes to take control of!"
+			return None
+
+		self.players[player_id] = player_id
+		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
+
+		return player_id
+
 
 	def add_dude(self):
 		d = Dude(id = len(self.dudes), batch = self.dudes_batch)
 		d.randomise()
 		self.dudes.append(d)
+
+	def nearest_dude_to(self, dude):
+		x1, y1 = dude.xy()
+		mindist = None
+		nearestDude = None
+		for d in self.dudes:
+			x2, y2 = d.xy()
+			dy = y2 - y1
+			dx = x2 - x1
+			dist = math.sqrt(dy*dy + dx*dx)
+			if dist < 100 and (mindist is None or dist < mindist):
+				mindist = dist
+				nearestDude = d
+
+		return nearestDude
 
 	def add_door(self, building):
 		# building ID determines location
@@ -84,8 +117,8 @@ class World:
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
 			self.doors.append((path, door_location))
                 
-	def get_player(self, myplayerID):
-		return self.dudes[myplayerID]
+	def get_player(self, player_id):
+		return self.dudes[player_id]
 
 	def draw(self, window):
 		window.clear()
@@ -127,7 +160,7 @@ class Building:
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 1)),
 			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
@@ -145,6 +178,8 @@ class Building:
 			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
 			}
 
+	EXPLOSION = anim.load_anim('Explosion', loop=False)
+
 	def __init__(self, id, state=None):
 		self.id = id
 		self.type = self.TYPE_CLOTHES
@@ -152,19 +187,34 @@ class Building:
 		self.blownup_cooldown = 0
 
 		if state != None:
-			(self.type, self.has_bomb, self.blownup_cooldown, self.door_location) = state
+			(self.type, self.has_bomb, self.blownup_cooldown) = state
 
 		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
+
+		self.explosion_sprite = None
 	
 	def draw(self, window):
 		self.sprite.draw()
+		if self.explosion_sprite:
+			self.explosion_sprite.draw()
 
 	def update(self, time):
 		pass
 
+	def explode(self):
+		if self.explosion_sprite: return
+		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+		self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+
+		@self.explosion_sprite.event
+		def on_animation_end():
+			del self.explosion_sprite
+			self.explosion_sprite = None
+
 	def state(self):
-		return (self.type, self.has_bomb, self.blownup_cooldown, self.door_location)
+		return (self.type, self.has_bomb, self.blownup_cooldown)
 
 from Dude import *

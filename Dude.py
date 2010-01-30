@@ -1,7 +1,7 @@
 from pyglet import *
 import random
 from model import *
-import glob, os
+import anim
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -53,22 +53,16 @@ PATH_INTERSECTS = [path_intersect(x) for x in range(PATHS)]
 
 LEFT, RIGHT, UP, DOWN = range(4)
 
+ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
+TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
+INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
+
 class Dude:
 	HAT, SUIT = range(2)
 	BLUE, YELLOW, GREEN = range(3)
 
-	def load_anim(path, fps):
-		jn = os.path.join
-		files = glob.glob(jn('assets', path, '*.png'))
-		files.sort()
-		images = [image.load(f) for f in files]
-		for img in images:
-			img.anchor_x = img.width // 2
-			img.anchor_y = img.height // 2
-		return image.Animation.from_image_sequence(images, 1.0/fps)
-
-	DUDE_IMG = load_anim('Guy_walking_greenJ_blond', 24)
-	#DUDE_HALO = load_anim('guy_walking_halo')
+	DUDE_IMG = anim.load_anim('Guy_walking_greenJ_blond', 24)
+	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -94,7 +88,11 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-		#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
+		self.marker = None
+		if self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
+
+		self.player_id = None
 
 		self.idle_time = 0.0
 
@@ -104,11 +102,35 @@ class Dude:
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
 
+		self.workout_next_direction()
+
+	def xy(self):
+		if left_right_path(self.path):
+			# on a horizontal path
+			y = PATH_INTERSECTS[self.path] * 768
+			x = 768 * self.location
+		else:
+			# on a vertical path
+			x = PATH_INTERSECTS[self.path] * 768
+			y = 768 * self.location
+
+		return (x,y)
+	
+	def take_control_by(self, player_id, suppressUpdate=False):
+		print "dude", self.id, "controlled by", player_id
+		self.player_id = player_id
+		self.next_direction = self.direction
+		self.idle_time = 0.0
+		self.score = 0
+		self.stopped = False
+		if not suppressUpdate:
+			self.update_remote_state()
+
 	def state(self):
-		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id)
 
 	def update_local_state(self, remotestate):
-		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id) = remotestate
 		if self.id is None:
 			self.id = id
 		elif id != self.id:
@@ -117,8 +139,8 @@ class Dude:
 	def update_remote_state(self):
 		broadcast_dude_update(self.state())
 
-	def isActivePlayer(self):
-		return myplayerID == self.id
+	def is_active_player(self):
+		return World.my_player_id == self.id
 
 	def randomise(self):
 		self.location = random.random()
@@ -178,12 +200,17 @@ class Dude:
 			# on a horizontal path
 			y = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.y = 1 + y
-			self.sprite.x = 256 + 1 + 766 * self.location
+			self.sprite.x = 256 + 1 + 768 * self.location
 		else:
 			# on a vertical path
 			x = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.x = 256 + 1 + x
-			self.sprite.y = 1 + 766 * self.location
+			self.sprite.y = 1 + 768 * self.location
+
+		if self.marker:
+			self.marker.rotation = self.sprite.rotation
+			self.marker.x = self.sprite.x
+			self.marker.y = self.sprite.y + 10
 
 
 	def forward(self):
@@ -275,16 +302,13 @@ class Dude:
 
 		return x
 
-	ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
-	TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
-	INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
-	def valid_next_direction(self):
+	def valid_next_directions(self):
 		next_intersect_id = self.next_intersect()
-		if self.row < BUILDINGS_X * 2:
-			x, y = self.row, next_intersect_id
+		if self.path < BUILDINGS_X * 2:
+			x, y = self.path, next_intersect_id
 		else:
-			y, x = self.row, next_intersect_id
+			y, x = self.path, next_intersect_id
 
 		valid_directions = []
 
@@ -302,6 +326,8 @@ class Dude:
 
 		return [INV_TRANS[d] for d in valid_directions]
 
+	def workout_next_direction(self):
+		self.next_direction = self.valid_next_directions()[0]
 
 	def update(self, time):
 		self.idle_time -= time
@@ -355,7 +381,13 @@ class Dude:
 				nextlocation = PATH_INTERSECTS[self.path]
 				self.path = new_path
 				self.direction = self.next_direction
+				if self.player_id is None:
+					self.workout_next_direction()
 
+		if nextlocation < 0:
+			nextlocation = 0
+		elif nextlocation > 1:
+			nextlocation = 1
 		self.location = nextlocation   
 
 
