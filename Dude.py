@@ -51,8 +51,6 @@ def path_intersect(path):
 
 PATH_INTERSECTS = [path_intersect(x) for x in range(PATHS)]
 
-LEFT, RIGHT, UP, DOWN = range(4)
-
 ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
 TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
 INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
@@ -102,6 +100,7 @@ class Dude:
 		self.mission_target = None
 
 		self.alive = True
+		self.fading = False
 
 		self.player_id = None
 
@@ -119,6 +118,12 @@ class Dude:
 			raise Exception("Dude does not have an ID!")
 
 		self.workout_next_direction()
+
+	def respawn(self):
+		self.is_in_building = True
+		self.building_id = random.randint(0,15)
+		b = World.get_world().buildings[self.building_id]
+		t = Building.BUILDING_TYPE[b.type]
 
 	def state(self):
 		return (self.id, self.path, self.location, self.direction,
@@ -288,7 +293,7 @@ class Dude:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
 			for (door_path, door_location) in World.get_world().doors:
-				if door_path == self.path and (door_location - 0.069) < self.location < door_location:
+				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039:
 					# Player is at a door and may enter
 					self.is_in_building = True
 					self.building_id = i
@@ -349,6 +354,9 @@ class Dude:
 	def die(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
+		@self.sprite.event
+		def on_animation_end():
+			self.fading = True
 		self.alive = False
 
 	def opposite(self, direction):
@@ -504,6 +512,13 @@ class Dude:
 
 	def update(self, time):
 		if not self.alive:
+			if self.fading:
+				self.sprite.opacity -= time * 100
+				if self.sprite.opacity <= 0:
+					self.sprite.opacity = 255
+					self.sprite.visible = False
+					self.fading = False
+					clock.schedule_once(self.respawn, 5, self)
 			return
 
 		self.idle_time -= time

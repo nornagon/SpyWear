@@ -3,6 +3,8 @@ from pyglet import *
 import math
 import anim
 
+LEFT, RIGHT, UP, DOWN = range(4)
+
 BLUE, YELLOW, GREEN = range(3)
 HAT, NO_HAT = range(2)
 
@@ -212,33 +214,25 @@ class World:
 		x = (28 + 202 * (building.id % 4))/768.
 		y = (28 + 202 * (building.id / 4))/768.
 		# door ID determines path and location float
-		doorx, doory = building.BUILDING_TYPE[building.type][1]
-		if doorx == 0:
-			# left path
+		doorside, dooroffset = building.BUILDING_TYPE[building.type][1]
+		if doorside == LEFT:
 			path = (building.id % 4) * 2 + 8
-			door_location = y + doory
-#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			door_location = y + (dooroffset * 104)/768.0
 			self.doors.append((path, door_location))
 
-		if doorx == 1:
-			# right path
+		if doorside == RIGHT:
 			path = (building.id % 4) * 2 + 9
-			door_location = y + doory
-#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			door_location = y + (dooroffset * 104)/768.0
 			self.doors.append((path, door_location))
 
-		if doory == 0:
-			# lower path
+		if doorside == DOWN:
 			path = (building.id / 4) * 2
-			door_location = x + doorx
-#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			door_location = x + (dooroffset * 104)/768.0
 			self.doors.append((path, door_location))
 
-		if doory == 1:
-			# upper path
+		if doorside == UP:
 			path = (building.id / 4) * 2 + 1
-			door_location = x + doorx
-#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			door_location = x + (dooroffset * 104)/768.0
 			self.doors.append((path, door_location))
                 
 	def get_player(self, player_id):
@@ -310,38 +304,38 @@ class Building:
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (0.139, 0),
+			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/clothes_icon.png')),
-			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (0.139, 1),
+			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/bomb_icon.png')),
-			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (0.139, 1),
+			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/hospital_icon.png')),
-			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (0.139, 1),
+			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/museum_icon.png')),
-			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (1, 0.139),
+			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (UP, 0.5),
 				image.load('assets/Building_Icons/club_icon.png')),
-			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (0, 0.139),
+			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/arcade_icon.png')),
-			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (0.139, 1),
+			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/parking_icon.png')),
-			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (0.139, 1),
+			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/factory_icon.png')),
-			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (0.139, 1),
+			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (UP, 0.5),
 				None),
 #				image.load('assets/Building_Icons/office_icon.png')),
-			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (0.139, 1),
+			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (UP, 0.5),
 				image.load('assets/Building_Icons/park_icon.png')),
-			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1),
+			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/warehouse_icon.png')),
-			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1),
+			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/bank_icon.png')),
-			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1),
+			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/cafe_icon.png')),
-			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (0.139, 1),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (UP, 0.5),
 				image.load('assets/Building_Icons/city_hall_icon.png')),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (UP, 0.5),
 				image.load('assets/Building_Icons/radio_icon.png')),
-			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1),
+			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (UP, 0.5),
 				image.load('assets/Building_Icons/church_icon.png')),
 			}
 
@@ -375,23 +369,23 @@ class Building:
 		x = 256 + 1 + 28 + 202 * (id % 4)
 		y = 1 + 28 + 202 * (id / 4)
 
-		# this just sets left/right, top/bottom
-		self.light.x = x + door_loc[0] * 104
-		self.light.y = y + door_loc[1] * 104
-
 		# now we set location on the side
-		if door_loc[0] == 0: # left-hand side
+		if door_loc[0] == LEFT:
 			self.light.rotation = -90
-			self.light.y = y + (door_loc[1] - 0.069/2) * 768 - self.light.image.width // 2 - 28
-		elif door_loc[0] == 1: # right-hand side
+			self.light.x = x
+			self.light.y = y + door_loc[1] * 104 + self.light.image.width // 2
+		elif door_loc[0] == RIGHT:
 			self.light.rotation = 90
-			self.light.y = y + (door_loc[1] - 0.069/2) * 768 + self.light.image.width // 2 - 28
-		elif door_loc[1] == 0: # bottom side
+			self.light.x = x + 104
+			self.light.y = y + door_loc[1] * 104 - self.light.image.width // 2
+		elif door_loc[0] == DOWN:
 			self.light.rotation = 180
-			self.light.x = x + (door_loc[0] - 0.069/2) * 768 + self.light.image.width // 2 - 28
-		elif door_loc[1] == 1: # top side
+			self.light.x = x + door_loc[1] * 104 + self.light.image.width // 2
+			self.light.y = y
+		elif door_loc[0] == UP:
 			self.light.rotation = 0
-			self.light.x = x + (door_loc[0] - 0.069/2) * 768 - self.light.image.width // 2 - 28
+			self.light.x = x + door_loc[1] * 104 - self.light.image.width // 2
+			self.light.y = y + 104
 
 		self.explosion_sprite = None
 		self.exploding = False
