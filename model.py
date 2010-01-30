@@ -12,6 +12,8 @@ class World:
 		self.background = image.load('assets/City.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 
+		self.players = [None, None, None, None]
+
 		if state is None:
 			# init
 			for i in xrange(16):
@@ -19,6 +21,9 @@ class World:
 
 			for i in xrange(20):
 				self.add_dude()
+
+			global my_player_id
+			my_player_id = self.allocate_new_playerid()
 		else:
 			# construct from given state
 			(building_state, dude_state) = state
@@ -28,14 +33,27 @@ class World:
 
 			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
+	def allocate_new_playerid(self):
+		if not None in self.players:
+			return None
+
+		player_id = self.players.index(None)
+
+		if player_id > len(self.dudes):
+			print "No dudes to take control of!"
+			return None
+
+		self.players[player_id] = player_id
+		self.dudes[player_id].take_control_by(player_id)
+
 
 	def add_dude(self):
 		d = Dude(id = len(self.dudes), batch = self.dudes_batch)
 		d.randomise()
 		self.dudes.append(d)
 
-	def get_player(self, myplayerID):
-		return self.dudes[myplayerID]
+	def get_player(self, my_player_id):
+		return self.dudes[my_player_id]
 
 	def draw(self, window):
 		window.clear()

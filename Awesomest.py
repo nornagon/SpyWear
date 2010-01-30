@@ -12,7 +12,8 @@ from twisted.internet.task import LoopingCall
 
 WIDTH = 1024
 HEIGHT = 768
-myplayerID = 0
+
+my_player_id = 0
 
 random.seed()
 
@@ -36,13 +37,13 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 @window.event
 def on_key_press(symbol, modifiers):
 	if symbol in keybindings.keys():
-		world.get_player(myplayerID).turn(keybindings[symbol])
+		world.get_player(my_player_id).turn(keybindings[symbol])
 	if symbol == key.SPACE:
-		world.get_player(myplayerID).stopstart()
+		world.get_player(my_player_id).stopstart()
 	if symbol == key.ENTER:
-		world.get_player(myplayerID).enter()
+		world.get_player(my_player_id).enter()
 	if symbol == key.B:
-		world.get_player(myplayerID).bomb()
+		world.get_player(my_player_id).bomb()
 
 def update(dt):
 	world.update(dt)
@@ -68,8 +69,8 @@ def pygletPump():
 
 world = None
 def run((playerId, _world)):
-	global myplayerID
-	myplayerID = playerId
+	global my_player_id
+	my_player_id = playerId
 	global world
 	world = _world
 	LoopingCall(pygletPump).start(1/60.0)
