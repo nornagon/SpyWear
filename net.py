@@ -25,7 +25,7 @@ def broadcast_die(victim):
 
 def broadcast_player_update(state):
 	id = state[0]
-	broadcast_state(state, 'player_state', suppressId = id)
+	broadcast_state(state, 'player_state')#, suppressId = id)
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):

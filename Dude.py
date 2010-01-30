@@ -153,6 +153,11 @@ class Dude:
 				self.alive, self.building_id, self.building_direction, self.building_cooldown,
 				self.is_in_building) = remotestate
 
+		if (self.player_id != None):
+			player = self.get_player()
+			if player != None:
+				player.update_dude_sprites()
+
 		if self.id is None:
 			self.id = id
 		elif id != self.id:
@@ -598,7 +603,11 @@ class Dude:
 		if self.player_id == None:
 			return None
 
-		return World.get_world().players[self.player_id]
+		world = World.get_world()
+		if world == None:
+			return None
+		else:
+			return world.players[self.player_id]
 
 	def random_outfit(self):
 		self.outfit = random.choice([HAT, NO_HAT])
@@ -609,6 +618,9 @@ class Dude:
 		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		print "Changed clothes to ", self.outfit, self.colour
+
+		if (self.player_id != None):
+			self.get_player().update_dude_sprites()
 
 		self.update_remote_state()
 
@@ -649,6 +661,7 @@ class Dude:
 					# in a clothes store, get random clothes
 					if self.am_incharge():
 						self.random_outfit()
+						self.update_remote_state()
 
 					if self.is_active_player():
 						CASH_SOUND.play()

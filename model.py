@@ -70,6 +70,12 @@ class Player(object):
 		self.death_count = 0
 		self.score = 0
 
+		self.head = None
+		self.body = None
+
+		self.mission_sprite = None
+		self.mission_target_sprite = None
+
 		if state != None:
 			self.set_state(state)
 
@@ -78,19 +84,24 @@ class Player(object):
 		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
 				x = 3, y = offset_y + 180 - 3 - 4 - 52)
 
-		self.head = None
-		self.body = None
-
-		self.mission_sprite = None
-		self.mission_target_sprite = None
 
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score)
 
 	def set_state(self, state):
+		print "player setstate", state
+		oldmission = self.mission
+		oldmission_target = self.mission_target
+
 		(id, self.mission, self.mission_target, self.mission_cooldown,\
 				self.name, self.death_count, self.score) = state
+
+		if oldmission != self.mission or oldmission_target != self.mission_target:
+			if self.mission != None and self.id == World.my_player_id:
+				MISSION_ASSIGN_SOUND.play()
+
+			self.clear_mission_sprites()
 	
 	def update_dude_sprites(self):
 		if (self.head != None):
@@ -114,7 +125,7 @@ class Player(object):
 		self.body = sprite.Sprite(self.BODY_ICONS[dude.colour], batch = self.batch,
 				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43 - 84)
 
-	def update_mission_sprites(self):
+	def clear_mission_sprites(self):
 		if (self.mission_sprite != None):
 			self.mission_sprite.delete()
 			self.mission_sprite = None
@@ -122,6 +133,10 @@ class Player(object):
 		if (self.mission_target_sprite != None):
 			self.mission_target_sprite.delete()
 			self.mission_target_sprite = None
+
+
+	def update_mission_sprites(self):
+		self.clear_mission_sprites()
 
 		if self.mission != None:
 			offset_y = self.get_offset_y()
@@ -157,14 +172,22 @@ class Player(object):
 		if self.head == None:
 			self.update_dude_sprites()
 
-		self.mission_cooldown -= time
-		if self.mission_cooldown < 0.0 and self.mission == None:
-			# no mission and cooldown's up, get a new mission
-			self.mission = self.MISSION_BUILDING
-			self.mission_target = random.choice(range(16))
-			MISSION_ASSIGN_SOUND.play()
-			print "Player ", self.id, " has received a mission to go to ", self.mission_target
+		if self.mission_sprite == None and self.mission != None:
 			self.update_mission_sprites()
+
+		if World.is_server:
+			self.mission_cooldown -= time
+			if self.mission_cooldown < 0.0 and self.mission == None:
+				# no mission and cooldown's up, get a new mission
+				self.mission = self.MISSION_BUILDING
+				self.mission_target = random.choice(range(16))
+				self.update_mission_sprites()
+				self.update_remote_state()
+				if self.id == World.my_player_id:
+					MISSION_ASSIGN_SOUND.play()
+
+	def update_remote_state(self):
+		broadcast_player_update(self.get_state())
 
 	def get_dude(self):
 		return World.get_world().dudes[self.id]
@@ -236,7 +259,7 @@ class World:
 
 			self.dudes = [Dude(state=s) for s in dude_state]
 
-			self.set_player_state(player_state)
+			self.set_players_state(player_state)
 
 	__instance = None
 	@classmethod
@@ -366,14 +389,26 @@ class World:
 	def get_player_state(self):
 		return [p and p.get_state() or None for p in self.players]
 
+	def set_players_state(self, players):
+		for s in players:
+			self.set_player_state(s)
+	
 	def set_player_state(self, player_state):
-		for i in xrange(len(self.players)):
-			if player_state[i] != None and self.players[i] == None:
-				self.players[i] = Player(id = i, state = player_state[i])
-			elif player_state[i] == None and self.players[i] != None:
-				self.players[i] = None
-			elif player_state[i] != None and self.players[i] != None:
-				self.players[i].set_state(player_state[i])
+		print "set_player_state", player_state
+
+		if player_state == None:
+			return
+
+		id = player_state[0]
+
+		if player_state != None and self.players[id] == None:
+			self.players[id] = Player(id = id, state = player_state)
+#		elif player_state == None and self.players[i] != None:
+#			self.players[id] = None
+		elif player_state != None and self.players[id] != None:
+			self.players[id].set_state(player_state)
+
+
 
 	# For net sync
 	def state(self):
