@@ -17,9 +17,11 @@ myplayerID = 0
 random.seed()
 
 window = window.Window(width=1024, height=768)
+window.clear()
 
 @window.event
 def on_draw():
+	window.clear()
 	world.draw(window)
 
 @window.event
