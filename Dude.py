@@ -2,6 +2,7 @@ from pyglet import *
 import random
 from model import *
 import anim
+import math
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -30,6 +31,14 @@ import anim
 BUILDINGS_X = 4
 BUILDINGS_Y = 4
 PATHS = (BUILDINGS_X + BUILDINGS_Y) * 2
+
+DOOR_OPEN_SOUND = resource.media('assets/Door Open.wav', streaming=False)
+DOOR_CLOSE_SOUND = resource.media('assets/Door Close.wav', streaming=False)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
+ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
+CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
+
 
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
@@ -364,6 +373,7 @@ class Dude:
 			for (door_path, door_location) in World.get_world().doors:
 				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039:
 					# Player is at a door and may enter
+					DOOR_OPEN_SOUND.play()
 					self.is_in_building = True
 					self.building_id = i
 					self.building_cooldown = 4.0
@@ -399,6 +409,9 @@ class Dude:
 			def start_fade(dt):
 				clock.schedule_interval(do_fade, 1/60.0)
 			clock.schedule_once(start_fade, 1.5)
+
+			self.has_bomb = False
+			ARM_BOMB_SOUND.play()
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
@@ -407,6 +420,8 @@ class Dude:
 			World.get_world().buildings[self.bomb_location].explode()
 			self.has_bomb = False
 			self.bomb_location = None
+			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(lambda dt: laugh.play(), 1.0)
 		
 		# no bomb
 		else:
@@ -615,6 +630,8 @@ class Dude:
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
 					self.random_outfit()
+					CASH_SOUND.play()
+					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:
@@ -625,8 +642,8 @@ class Dude:
 				print "finished in building, moving on"
 				self.is_in_building = False
 				player = self.get_player()
-				if player != None and player.mission == Player.MISSION_BUILDING \
-						and player.mission_target == self.building_id:
+				DOOR_CLOSE_SOUND.play()
+				if World.get_world().player_missions[self.player_id] == self.building_id:
 					# player has completed a mission in a building
 					player.complete_mission()
 

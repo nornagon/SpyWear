@@ -174,6 +174,9 @@ class Player(object):
 		self.mission_cooldown = 7.
 
 
+COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
+LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
+LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 
 class World:
 	is_server = True
@@ -349,6 +352,12 @@ class World:
 
 	def remote_explode(self, state):
 		terrorist_id, building_id = state
+		(x,y) = self.dudes[terrorist_id].xy()
+		(myx, myy) = self.dudes[self.player_id].xy()
+		d = math.sqrt((x-myx)^2 + (y-myy)^2)
+		if d < 100:
+			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
+			clock.schedule_once(explosion_animation, 1.0)
 
 		self.buildings[building_id].explode()
 
