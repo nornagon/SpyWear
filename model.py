@@ -8,6 +8,9 @@ LEFT, RIGHT, UP, DOWN = range(4)
 BLUE, YELLOW, GREEN = range(3)
 HAT, NO_HAT = range(2)
 
+MISSION_ASSIGN_SOUND = resource.media('assets/Mission Assigned.wav', streaming=False)
+MISSION_WIN_SOUND = resource.media('assets/Mission Complete.wav', streaming=False)
+
 class Player(object):
 	FLAG_SOVIET, FLAG_UK, FLAG_US, FLAG_GERM = range(4)
 
@@ -159,6 +162,7 @@ class Player(object):
 			# no mission and cooldown's up, get a new mission
 			self.mission = self.MISSION_BUILDING
 			self.mission_target = random.choice(range(16))
+			MISSION_ASSIGN_SOUND.play()
 			print "Player ", self.id, " has received a mission to go to ", self.mission_target
 			self.update_mission_sprites()
 
@@ -175,6 +179,7 @@ class Player(object):
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
+		MISSION_WIN_SOUND.play()
 		self.score += 1
 		self.mission = None
 		self.mission_cooldown = 7.0
