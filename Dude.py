@@ -319,20 +319,27 @@ class Dude:
 
 	# This function returns the next path which the dude will cross.
 	def next_intersect(self):
-		x = 0
-		while PATH_INTERSECTS[x] < self.location and x < (BUILDINGS_X * 2 - 1):
-			x += 1
+		if self.location in PATH_INTERSECTS:
+#			print "in intersects"
+			x = PATH_INTERSECTS.index(self.location)
+		else:
+			x = 0
 
-		if not self.forward() and x > 0:
-			x -= 1
+			while PATH_INTERSECTS[x] < self.location and x < (BUILDINGS_X * 2 - 1):
+				x += 1
+
+			if not self.forward() and x > 0:
+				x -= 1
 
 		if left_right_path(self.path):
 			x += BUILDINGS_X * 2
 
 		return x
 
+	def in_intersect(self):
+		return self.location in PATH_INTERSECTS
 
-	def valid_next_directions(self):
+	def destination_row_coordinates(self):
 		next_intersect_id = self.next_intersect()
 		if next_intersect_id >= 8:
 			next_intersect_id -= 8
@@ -341,6 +348,11 @@ class Dude:
 			y, x = self.path, next_intersect_id
 		else:
 			x, y = self.path - 8, next_intersect_id
+
+		return (x, y)
+
+	def valid_next_directions(self):
+		x, y = self.destination_row_coordinates()
 
 		valid_directions = []
 
@@ -356,12 +368,94 @@ class Dude:
 		return valid_directions
 
 	def workout_next_direction(self):
-#		print "workout next direction. direction:", self.direction
+#		print "workout next direction. Old direction:", self.direction
 		directions = self.valid_next_directions()
 #		print "valid directions:", directions
 #		self.next_direction = directions[0]
 		self.turn(random.choice(directions))
 		self.update_remote_state()
+
+	# do movement update.
+	def movement_update_helper(self, time):
+		frame_distance = time * self.SPEED
+
+		if self.forward():
+			# going from 0 to 1
+			nextlocation = self.location + frame_distance
+		else:
+			# going from 1 to 0
+			nextlocation = self.location - frame_distance
+		
+		while True:
+			# Few cases:
+			# - We're at an intersection: (optionally) turn, figure out new next_direction
+			# - We're going along a straight path. Just move to next intersection
+
+			# Pump the next_direction
+			if self.in_intersect() and self.next_direction != None:
+#				print "Turning in intersection. Should only happen once per corner"
+
+				intersect = self.next_intersect()
+
+				# ... just for debugging
+				x, y = self.destination_row_coordinates()
+#				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
+
+				if self.direction != self.next_direction:
+					self.direction = self.next_direction
+					self.location = PATH_INTERSECTS[self.path]
+					self.path = intersect
+
+				self.next_direction = None
+
+				x, y = self.destination_row_coordinates()
+#				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
+
+			if self.in_intersect() and self.next_direction == None:
+#				print "Moving away from intersect by %f" % frame_distance
+
+				if self.forward():
+					self.location += frame_distance
+				else:
+					self.location -= frame_distance
+
+				if self.player_id is None and World.is_server:
+#					print "workout"
+					self.workout_next_direction()
+
+				return
+
+			if not self.in_intersect():
+#				print "between intersect. Moving forward..."
+
+				intersect = self.next_intersect()
+				next_path_intersect = PATH_INTERSECTS[intersect]
+
+				if (self.forward() and nextlocation > next_path_intersect) \
+					or (not self.forward() and nextlocation < next_path_intersect):
+						# Just advance to the intersect
+					pre_distance = abs(self.location - next_path_intersect)
+					post_distance = frame_distance - pre_distance
+
+					# now advance to the intersect
+					self.location = next_path_intersect
+					frame_distance = post_distance
+				else:
+					if self.forward():
+						self.location += frame_distance
+					else:
+						self.location -= frame_distance
+
+					return
+
+
+		if self.location < PATH_INTERSECTS[0]:
+			self.location = PATH_INTERSECTS[0]
+		elif self.location > PATH_INTERSECTS[7]:
+			self.location = PATH_INTERSECTS[7]
+
+		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
+			print "Wargh direction set wrong"
 
 	def update(self, time):
 		self.idle_time -= time
@@ -374,6 +468,7 @@ class Dude:
 
 		if self.is_in_building:
 			start_time = self.building_cooldown
+
 			self.building_cooldown -= time
 			if start_time >= 2.0 and self.building_cooldown < 2.0:
 				# End point of building travel. Buy from shop
@@ -399,44 +494,7 @@ class Dude:
 		if self.stopped:
 			return
 
-		travel = time * self.SPEED
-
-		while (travel > 1/10000.):
-			if self.direction == RIGHT or self.direction == UP:
-				# going from 0 to 1
-				forwards = True
-				nextlocation = self.location + travel
-			else:
-				# going from 1 to 0
-				forwards = False
-				nextlocation = self.location - travel
-
-			next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
-
-			if (forwards and nextlocation > next_path_intersect) \
-				or (not forwards and nextlocation < next_path_intersect):
-
-				if self.direction != self.next_direction:
-					# we have passed the intersect and are turning
-					new_path = self.next_intersect()
-					nextlocation = PATH_INTERSECTS[self.path]
-					self.path = new_path
-					self.direction = self.next_direction
-
-					if self.player_id is None and World.is_server:
-						print "workout"
-						self.workout_next_direction()
-
-				travelled = abs(self.location - nextlocation)
-				self.location = nextlocation
-				travel -= travelled
-			else:
-				self.location = nextlocation
-				travel = 0
-
-		if self.location < PATH_INTERSECTS[0]:
-			self.location = PATH_INTERSECTS[0]
-		elif self.location > PATH_INTERSECTS[7]:
-			self.location = PATH_INTERSECTS[7]
+		self.movement_update_helper(time)
 
 from net import broadcast_dude_update
+

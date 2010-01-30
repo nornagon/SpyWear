@@ -32,7 +32,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(2):
+			for i in xrange(20):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()
