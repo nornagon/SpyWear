@@ -296,12 +296,12 @@ class Dude:
 		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode()
-			for i in range(4)
+			for i in range(4):
 				if World.get_world().player_missions[i] == self.bomb_location:
 					# bomb has destroyed a mission, wipe mission for no points
 					World.get_world().player_missions[i] = None
 					World.get_world().player_missions_cooldown[i] = 7
-				if World.get_world().players[i] not None:
+				if World.get_world().players[i] != None:
 					if World.get_world().dudes[i].is_in_building and World.get_world().dudes[i].building_id == self.bomb_location:
 						# a player has been caught inside the bomb blast
 						self.score += 1
