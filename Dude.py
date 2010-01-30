@@ -1,6 +1,7 @@
 from pyglet import *
 import random
 from model import *
+import glob, os
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -57,7 +58,7 @@ class Dude:
 
 	def load_anim(path, fps):
 		jn = os.path.join
-		files = [jn('assets', path, p) for p in os.listdir(jn('assets', path))]
+		files = [jn('assets', path, p) for p in glob.glob(jn('assets', path, '*.png'))]
 		files.sort()
 		print files
 		images = [image.load(f) for f in files]
