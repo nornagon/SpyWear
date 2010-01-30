@@ -38,7 +38,7 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 
 @window.event
 def on_key_press(symbol, modifiers):
-	dude = world.get_player(World.my_player_id)
+	dude = world.get_player_dude(World.my_player_id)
 
 	if symbol in keybindings.keys():
 		dude.turn(keybindings[symbol])
