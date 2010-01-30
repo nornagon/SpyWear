@@ -38,12 +38,14 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 def on_key_press(symbol, modifiers):
 	if symbol in keybindings.keys():
 		world.get_player(World.my_player_id).turn(keybindings[symbol])
-	if symbol == key.SPACE:
+	elif symbol == key.SPACE:
 		world.get_player(World.my_player_id).stopstart()
-	if symbol == key.ENTER:
+	elif symbol == key.ENTER:
 		world.get_player(World.my_player_id).enter()
-	if symbol == key.B:
+	elif symbol == key.B:
 		world.get_player(World.my_player_id).bomb()
+	elif symbol == key.V:
+		world.get_player(World.my_player_id).shoot()
 
 def update(dt):
 	world.update(dt)

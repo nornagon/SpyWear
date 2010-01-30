@@ -1,6 +1,7 @@
 import random
 from pyglet import *
 import math
+import anim
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
@@ -15,12 +16,19 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
+		crosshair = image.load('assets/crosshair.png')
+		crosshair.anchor_x = crosshair.width // 2
+		crosshair.anchor_y = crosshair.height // 2
+		self.crosshair = sprite.Sprite(crosshair)
+
 		self.players = [None, None, None, None]
 
 		if state is None:
 			# init
+			building_types = range(16)
+			random.shuffle(building_types)
 			for i in xrange(16):
-				building = Building(i)
+				building = Building(i, type=building_types[i])
 				self.buildings.append(building)
 				self.add_door(building)
 
@@ -33,7 +41,7 @@ class World:
 			(building_state, dude_state) = state
 
 			for i in xrange(len(building_state)):
-				building = Building(i, building_state[i])
+				building = Building(i, state=building_state[i])
 				self.buildings.append(building)
 				self.add_door(building)
 
@@ -69,6 +77,22 @@ class World:
 		d.randomise()
 		self.dudes.append(d)
 
+	def nearest_dude_to(self, dude):
+		x1, y1 = dude.xy()
+		mindist = None
+		nearestDude = None
+		for d in self.dudes:
+			if d is dude: continue
+			x2, y2 = d.xy()
+			dy = y2 - y1
+			dx = x2 - x1
+			dist = math.sqrt(dy*dy + dx*dx)
+			if dist < 100 and (mindist is None or dist < mindist):
+				mindist = dist
+				nearestDude = d
+
+		return nearestDude
+
 	def add_door(self, building):
 		# building ID determines location
 		x = (28 + 202 * (building.id % 4))/768.
@@ -80,24 +104,28 @@ class World:
 			path = (building.id % 4) * 2 + 8
 			door_location = y + doory
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doorx == 1:
 			# right path
 			path = (building.id % 4) * 2 + 9
 			door_location = y + doory
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doory == 0:
 			# lower path
 			path = (building.id / 4) * 2
 			door_location = x + doorx
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
 
 		if doory == 1:
 			# upper path
 			path = (building.id / 4) * 2 + 1
 			door_location = x + doorx
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+			self.doors.append((path, door_location))
                 
 	def get_player(self, player_id):
 		return self.dudes[player_id]
@@ -115,6 +143,13 @@ class World:
 
 		for b in self.buildings:
 			b.draw(window)
+
+		player = self.get_player(World.my_player_id)
+		nearest = self.nearest_dude_to(player)
+		if nearest:
+			xy = nearest.xy()
+			self.crosshair.set_position(256 + 1 + xy[0], 1 + xy[1])
+			self.crosshair.draw()
 
 		# hud
 		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
@@ -140,11 +175,13 @@ class Building:
 	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
 	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
+	
+	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 0)),
+			TYPE_BOMB: (image.load('assets/bomb_test.png'), (0.114, 1)),
+			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_DISCO: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_ARCADE: (image.load('assets/building.png'), (0.114, 1)),
@@ -160,9 +197,11 @@ class Building:
 			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
 			}
 
-	def __init__(self, id, state=None):
+	EXPLOSION = anim.load_anim('Explosion', loop=False)
+
+	def __init__(self, id, type=None, state=None):
 		self.id = id
-		self.type = self.TYPE_CLOTHES
+		self.type = type
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 
@@ -172,12 +211,34 @@ class Building:
 		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
+
+		self.explosion_sprite = None
+		self.exploding = False
 	
 	def draw(self, window):
 		self.sprite.draw()
+		if self.explosion_sprite:
+			self.explosion_sprite.draw()
 
 	def update(self, time):
 		pass
+
+	def explode(self):
+		if self.exploding: return
+		self.BOMB_SOUND.play()
+		self.exploding = True
+		def explosion_animation(dt):
+			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+
+			@self.explosion_sprite.event
+			def on_animation_end():
+				del self.explosion_sprite
+				self.explosion_sprite = None
+				self.exploding = False
+
+		clock.schedule_once(explosion_animation, 0.6)
 
 	def state(self):
 		return (self.type, self.has_bomb, self.blownup_cooldown)

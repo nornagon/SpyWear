@@ -1,7 +1,7 @@
 from pyglet import *
 import random
 from model import *
-import glob, os
+import anim
 
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
@@ -57,20 +57,19 @@ ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
 TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
 INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
+HAT, NO_HAT = range(2)
+BLUE, YELLOW, GREEN = range(3)
+
 class Dude:
-	HAT, COAT, SUIT = range(3)
-
-	def load_anim(path, fps):
-		jn = os.path.join
-		files = glob.glob(jn('assets', path, '*.png'))
-		files.sort()
-		images = [image.load(f) for f in files]
-		for img in images:
-			img.anchor_x = img.width // 2
-			img.anchor_y = img.height // 2
-		return image.Animation.from_image_sequence(images, 1.0/fps)
-
-	DUDE_IMG = load_anim('Guy_walking_greenJ_blond', 24)
+	DUDE_OUTFITS = {
+		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat'),
+		(NO_HAT, BLUE): anim.load_anim('guy_walking_blue_noHat'),
+		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat'),
+		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat'),
+		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
+		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
+	}
+	DUDE_MARKER = anim.load_anim('Rings', 18)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -82,8 +81,13 @@ class Dude:
 		self.direction = RIGHT
 		self.next_direction = self.direction
 		self.stopped = False
-		self.outfit = self.HAT
-		self.colour = 0
+		self.outfit = HAT
+		self.colour = BLUE
+		self.batch = batch
+		self.is_in_building = False
+		self.building_id = None
+		self.building_direction = UP
+		self.building_cooldown = 0.0
 		
 		self.has_bomb = False
 		self.bomb_location = None
@@ -91,10 +95,12 @@ class Dude:
 		self.mission_target = None
 		self.score = 9001
 
-		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-		self.halo = None
-		#if self.is_active_player():
-			#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=batch, group=anim.GROUND)
+		self.marker = None
+		if self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch,
+					group=anim.MARKER)
 
 		self.player_id = None
 
@@ -107,6 +113,18 @@ class Dude:
 			raise Exception("Dude does not have an ID!")
 
 		self.workout_next_direction()
+
+	def xy(self):
+		if left_right_path(self.path):
+			# on a horizontal path
+			y = PATH_INTERSECTS[self.path] * 768
+			x = 768 * self.location
+		else:
+			# on a vertical path
+			x = PATH_INTERSECTS[self.path] * 768
+			y = 768 * self.location
+
+		return (x,y)
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
 		print "dude", self.id, "controlled by", player_id
@@ -143,6 +161,11 @@ class Dude:
 		else:
 			self.direction = random.randint(UP, DOWN)
 			self.next_direction = self.direction
+		self.outfit = random.choice([HAT, NO_HAT])
+		self.colour = random.choice([BLUE, YELLOW, GREEN])
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=self.batch, group=anim.GROUND)
+
 
 		self.workout_next_direction()
 
@@ -157,21 +180,56 @@ class Dude:
 			self.sprite.rotation = 0
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
-		if left_right_path(self.path):
+		#self.halo.rotation = self.sprite.rotation
+		if self.is_in_building:
+			if self.building_cooldown > 2.:
+				# go in
+				offset = ((4. - self.building_cooldown)/2.) * 66
+				entering = True
+			else:
+				# go out
+				offset = self.building_cooldown/2. * 66
+				entering = False
+
+			if self.building_direction == UP:
+				# on a horizontal path
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + 766 * self.location
+				self.sprite.y = 1 + y + offset
+				if entering:
+					self.direction = UP
+				else:
+					self.direction = DOWN
+				
+			if self.building_direction == DOWN:
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + 766 * self.location
+				self.sprite.y = 1 + y - offset
+				if entering:
+					self.direction = DOWN
+				else:
+					self.direction = UP
+
+			if self.building_direction == LEFT:
+				pass
+			if self.building_direction == RIGHT:
+				pass
+				
+		elif left_right_path(self.path):
 			# on a horizontal path
 			y = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.y = 1 + y
-			self.sprite.x = 256 + 1 + 766 * self.location
+			self.sprite.x = 256 + 1 + 768 * self.location
 		else:
 			# on a vertical path
 			x = PATH_INTERSECTS[self.path] * 768.0
 			self.sprite.x = 256 + 1 + x
-			self.sprite.y = 1 + 766 * self.location
+			self.sprite.y = 1 + 768 * self.location
 
-		#if self.halo:
-			#self.halo.rotation = self.sprite.rotation
-			#self.halo.x = self.sprite.x
-			#self.halo.y = self.sprite.y
+		if self.marker:
+			self.marker.rotation = self.sprite.rotation
+			self.marker.x = self.sprite.x
+			self.marker.y = self.sprite.y
 
 
 	def forward(self):
@@ -183,29 +241,64 @@ class Dude:
 			return False
 
 	def turn(self, new_direction):
-		if new_direction == self.opposite(self.direction):
-			self.direction = new_direction
-			self.next_direction = new_direction
-		else:
-			self.next_direction = new_direction
+		if not self.is_in_building:
+			if new_direction == self.opposite(self.direction):
+				self.direction = new_direction
+				self.next_direction = new_direction
+			else:
+				self.next_direction = new_direction
 
-		self.stopped = False
+			self.stopped = False
 
-		self.update_remote_state()
+			self.update_remote_state()
  
 	def stopstart(self):
-		self.stopped = not self.stopped
-		self.update_remote_state()
+		if not self.is_in_building:
+			self.stopped = not self.stopped
+			self.update_remote_state()
 
 	def enter(self):
-		pass
+		if not self.is_in_building:
+			# Use self.path and self.location to see if we're near a door
+			i = 0
+			for (door_path, door_location) in World.get_world().doors:
+				if door_path == self.path and (door_location - 0.057) < self.location < door_location:
+					# Player is at a door and may enter
+					self.is_in_building = True
+					self.building_id = i
+					self.building_cooldown = 4.0
+					# Even is up or right, Odd is down or left
+					if self.path < 8 and self.path % 2 == 0:
+						# Go up
+						self.building_direction = UP
+					elif self.path < 8 and self.path % 2 == 1:
+						# Go down (on your mother)
+						self.building_direction = DOWN
+					elif self.path >= 8 and self.path % 2 == 0:
+						# Go right
+						self.building_direction = RIGHT
+					elif self.path >= 8 and self.path % 2 == 1:
+						# Go left
+						self.building_direction = LEFT
+					print "Player has entered building ", i, " going ", self.building_direction
+				i += 1
 		
 	def bomb(self):
 		# if in building, set bomb
+		if self.is_in_building and self.has_bomb:
+			self.bomb_location = self.building_id
+			print "laid bomb in building ", self.building_id
+		
 		# if bomb in play, set off bomb
-		# else error message
-		pass
-                
+		elif self.bomb_location != None:
+			print "Set off bomb in building ", self.bomb_location
+			World.get_world().buildings[self.bomb_location].explode()
+
+			self.bomb_location = None
+		
+		# no bomb
+		else:
+			print "Player has no bomb, tried to set one off"
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -265,7 +358,34 @@ class Dude:
 	def update(self, time):
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
-
+		
+		if self.is_in_building:
+			start_time = self.building_cooldown
+			self.building_cooldown -= time
+			if start_time >= 2.0 and self.building_cooldown < 2.0:
+				# End point of building travel. Buy from shop
+				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
+					# in a clothes store, get random clothes
+					self.outfit = random.choice([HAT, NO_HAT])
+					self.colour = random.choice([BLUE, YELLOW, GREEN])
+					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+							batch=self.batch, group=anim.GROUND)
+					print "Changed clothes to ", self.outfit, self.colour
+				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
+					# in a bomb store
+					if self.has_bomb == False and self.bomb_location == None:
+						# purchase a bomb
+						print "Picked up a bomb"
+						self.has_bomb = True
+			if self.building_cooldown < 0:
+				print "finished in building, moving on"
+				self.is_in_building = False
+				if self.building_direction == UP or self.building_direction == DOWN:
+					self.direction = RIGHT
+				else:
+					self.direction = UP
+				return
+			return
 		if self.stopped:
 			return
 
