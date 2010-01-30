@@ -271,8 +271,10 @@ class Dude:
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
-		if self.bomb_location != None:
+		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
+			World.get_world().buildings[self.bomb_location].explode()
+
 			self.bomb_location = None
 		
 		# no bomb
@@ -347,6 +349,7 @@ class Dude:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:
 						# purchase a bomb
+						print "Picked up a bomb"
 						self.has_bomb = True
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"

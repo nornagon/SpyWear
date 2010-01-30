@@ -158,9 +158,11 @@ class Building:
 	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
 	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
+	
+	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 1)),
+			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 0)),
 			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_HOSPITAL: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
@@ -182,7 +184,7 @@ class Building:
 
 	def __init__(self, id, state=None):
 		self.id = id
-		self.type = self.TYPE_CLOTHES
+		self.type = self.TYPE_BOMB
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 
@@ -205,6 +207,7 @@ class Building:
 
 	def explode(self):
 		if self.explosion_sprite: return
+		self.BOMB_SOUND.play()
 		self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
 		self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
 		self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
