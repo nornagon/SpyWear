@@ -69,8 +69,7 @@ def pygletPump():
 def run((playerId, _world)):
 	global myplayerID
 	myplayerID = playerId
-	global world
-	world = _world
+	World.set_world(_world)
 	LoopingCall(pygletPump).start(1/60.0)
 
 world_deferred.addCallback(run)

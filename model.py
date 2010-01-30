@@ -35,6 +35,15 @@ class World:
 
 			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
+	__instance = None
+	@classmethod
+	def get_world(cls):
+		return cls.__instance
+
+	@classmethod
+	def set_world(cls, world):
+		cls.__instance = world
+
 
 	def add_dude(self):
 		d = Dude(id = len(self.dudes), batch = self.dudes_batch)
