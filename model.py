@@ -463,7 +463,7 @@ class World:
 	def remote_explode(self, state):
 		terrorist_id, building_id = state
 		(x,y) = self.dudes[terrorist_id].xy()
-		(myx, myy) = self.dudes[self.player_id].xy()
+		(myx, myy) = self.dudes[self.my_player_id].xy()
 		d = math.sqrt((x-myx)^2 + (y-myy)^2)
 		if d < 100:
 			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
