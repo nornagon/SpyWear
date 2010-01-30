@@ -62,6 +62,8 @@ class Player:
 
 		if self.mission != None:
 			self.MISSION_ICONS[self.mission].blit(94, offset_y + 180 - 63)
+			target_building = World.get_world().buildings[self.mission_target]
+			Building.BUILDING_TYPE[target_building.type][2].blit(94, offset_y + 180 -63 - 67)
 
 		dude = self.get_dude()
 		if (dude.outfit == HAT):
@@ -70,14 +72,15 @@ class Player:
 			head = 1
 
 		self.HEAD_ICONS[dude.colour][head].blit(94 + 60 + 7, offset_y + 180 - 3 - 43)
+		self.BODY_ICONS[dude.colour].blit(94 + 60 + 7, offset_y + 180 - 3 - 43 - 84)
 
 # x = 94
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
 		self.score += 1
-		World.get_world().player_missions[self.player_id] = None
-		World.get_world().player_missions_cooldown[self.player_id] = 7.0
+		self.mission = None
+		self.mission_cooldown = 7.0
 
 	def mission_target_bombed(self):
 		self.mission = None
@@ -276,22 +279,39 @@ class Building:
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (0.139, 0)),
-			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (0.139, 1)),
-			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (0.139, 1)),
-			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (0.139, 1)),
-			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (1, 0.139)),
-			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (0, 0.139)),
-			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (0.139, 1)),
-			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (0.139, 1)),
-			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (0.139, 1)),
-			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (0.139, 1)),
-			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1)),
-			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1)),
-			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1)),
-			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (0.139, 1)),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1)),
-			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1)),
+			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (0.139, 0),
+				image.load('assets/Building_Icons/clothes_icon.png')),
+			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/bomb_icon.png')),
+			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/hospital_icon.png')),
+			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/museum_icon.png')),
+			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (1, 0.139),
+				image.load('assets/Building_Icons/club_icon.png')),
+			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (0, 0.139),
+				image.load('assets/Building_Icons/arcade_icon.png')),
+			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/parking_icon.png')),
+			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/factory_icon.png')),
+			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (0.139, 1),
+				None),
+#				image.load('assets/Building_Icons/office_icon.png')),
+			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (0.139, 1),
+				image.load('assets/Building_Icons/park_icon.png')),
+			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/warehouse_icon.png')),
+			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/bank_icon.png')),
+			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/cafe_icon.png')),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (0.139, 1),
+				image.load('assets/Building_Icons/city_hall_icon.png')),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (0.139, 1),
+				image.load('assets/Building_Icons/radio_icon.png')),
+			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1),
+				image.load('assets/Building_Icons/church_icon.png')),
 			}
 
 	for k in BUILDING_TYPE:

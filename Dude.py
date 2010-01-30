@@ -143,7 +143,7 @@ class Dude:
 		return (x,y)
 
 	def reset_idle_timer(self):
-		self.idle_time = 5.0
+		self.idle_time = 20.0
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
 		print "dude", self.id, "controlled by", player_id
