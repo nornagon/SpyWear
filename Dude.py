@@ -143,6 +143,8 @@ class Dude:
 		else:
 			self.next_direction = new_direction
 
+		self.stopped = False
+
 		self.update_remote_state()
  
 	def stopstart(self):
