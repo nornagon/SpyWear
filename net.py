@@ -59,7 +59,7 @@ class GGJPeer(pb.Root):
 		print "got world state"
 		(self.dude_id, state) = result
 		self.world = World(state=state)
-		return self.world
+		return (self.dude_id, self.world)
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"
@@ -71,7 +71,7 @@ def server_world():
 	factory = pb.PBServerFactory(GGJPeer(world=world))
 	reactor.listenTCP(PORT, factory)
 
-	return world
+	return (0, world)
 
 
 def client_world(remote_host):
