@@ -168,20 +168,21 @@ class Dude:
 	def respawn(self):
 		self.reset()
 
-		# pick a door to come out of
-		building_id = random.randint(0,15)
-		self.path, self.location = World.get_world().doors[building_id]
-		if self.path >= 8:
-			self.direction = random.choice([UP,DOWN])
-		else:
-			self.direction = random.choice([LEFT,RIGHT])
-		self.next_direction = None
+		if World.is_server:
+			# pick a door to come out of
+			building_id = random.randint(0,15)
+			self.path, self.location = World.get_world().doors[building_id]
+			if self.path >= 8:
+				self.direction = random.choice([UP,DOWN])
+			else:
+				self.direction = random.choice([LEFT,RIGHT])
+			self.next_direction = None
 
-		self.random_outfit()
-		self.sprite.visible = False
-		self.enter()
-		self.building_cooldown = 2.
-		self.update_remote_state()
+			self.random_outfit()
+			self.sprite.visible = False
+			self.enter()
+			self.building_cooldown = 2.
+			self.update_remote_state()
 
 	def xy(self):
 		if left_right_path(self.path):
