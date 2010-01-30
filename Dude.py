@@ -62,7 +62,8 @@ class Dude:
 	BLUE, YELLOW, GREEN = range(3)
 
 	DUDE_IMG = anim.load_anim('Guy_walking_greenJ_blond', 24)
-	DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
+	#DUDE_MARKER = anim.load_anim_bounce('Spin_arrow', 24)
+	DUDE_MARKER = anim.load_anim('Under_Arrow', 24)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
@@ -87,10 +88,10 @@ class Dude:
 		self.mission_target = None
 		self.score = 9001
 
-		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
+		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch, group=anim.GROUND)
 		self.marker = None
 		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch)
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch, group=anim.MARKER)
 
 		self.player_id = None
 
@@ -161,7 +162,6 @@ class Dude:
 			self.sprite.rotation = 0
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
-		#self.halo.rotation = self.sprite.rotation
 		if self.is_in_building:
 			if self.building_cooldown > 2.:
 				# go in
@@ -210,7 +210,7 @@ class Dude:
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
 			self.marker.x = self.sprite.x
-			self.marker.y = self.sprite.y + 10
+			self.marker.y = self.sprite.y
 
 
 	def forward(self):
