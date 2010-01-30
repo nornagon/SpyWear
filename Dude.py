@@ -252,7 +252,3 @@ class Dude:
 			else:
 				self.location = nextlocation
 
-
-
-
-from net import broadcast_dude_update

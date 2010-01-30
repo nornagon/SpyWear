@@ -1,6 +1,6 @@
 from twisted.internet import reactor, protocol, task
 from twisted.spread import pb
-from model import *
+from model import World
 import pyglet
 
 PORT = 4444
@@ -35,8 +35,8 @@ class GGJPeer(pb.Root):
 			raise Exception("invalid peer - must be a server or a client")
 
 	def remote_local_dude_state(self, dude_state):
-		self.world.dudes[dude_state[0]].update_state(dude_state)
-
+		world.update_dude(dude_state)
+		
 		if is_server:
 			broadcast_dude_update(dude_state)
 			print "server broadcast"

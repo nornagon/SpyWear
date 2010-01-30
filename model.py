@@ -68,6 +68,9 @@ class World:
 	def state(self):
 		return ([b.state() for b in self.buildings], [d.state() for d in self.dudes])
 
+	def update_dude(self, dude_state):
+		self.world.dudes[dude_state[0]].update_state(dude_state)
+
 class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
 	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
