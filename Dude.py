@@ -238,9 +238,9 @@ class Dude:
 		if not self.marker and self.is_active_player():
 			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
 					group=anim.MARKER)
-			self.turn_marker = sprite.Sprite(self.TURN_MARKER, batch=World.batch, group=anim.GROUND)
+			self.turn_marker = sprite.Sprite(self.TURN_MARKER, batch=World.batch, group=anim.PATH)
 			self.turn_marker.visible = False
-			self.turn_marker_flip = sprite.Sprite(self.TURN_MARKER_FLIP, batch=World.batch, group=anim.GROUND)
+			self.turn_marker_flip = sprite.Sprite(self.TURN_MARKER_FLIP, batch=World.batch, group=anim.PATH)
 			self.turn_marker_flip.visible = False
 
 
