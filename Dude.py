@@ -58,7 +58,7 @@ class Dude:
 
 	def load_anim(path, fps):
 		jn = os.path.join
-		files = [jn('assets', path, p) for p in glob.glob(jn('assets', path, '*.png'))]
+		files = glob.glob(jn('assets', path, '*.png'))
 		files.sort()
 		print files
 		images = [image.load(f) for f in files]
