@@ -7,6 +7,7 @@ COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
 class World:
 	batch = graphics.Batch()
+	is_server = True
 
 	def __init__(self, state = None):
 		self.buildings = []
@@ -31,7 +32,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(20):
+			for i in xrange(2):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()

@@ -168,6 +168,10 @@ class Dude:
 				batch=World.batch, group=anim.GROUND)
 
 
+		self.workout_next_direction()
+
+		self.update_remote_state()
+
 	def draw(self, window):
 		if self.direction == LEFT:
 			self.sprite.rotation = -90
@@ -328,29 +332,34 @@ class Dude:
 
 	def valid_next_directions(self):
 		next_intersect_id = self.next_intersect()
+		if next_intersect_id >= 8:
+			next_intersect_id -= 8
+
 		if self.path < BUILDINGS_X * 2:
-			x, y = self.path, next_intersect_id
-		else:
 			y, x = self.path, next_intersect_id
+		else:
+			x, y = self.path - 8, next_intersect_id
 
 		valid_directions = []
 
 		if x > 0:
-			valid_directions.append(ROT_LEFT)
+			valid_directions.append(LEFT)
 		if x < 7:
-			valid_directions.append(ROT_RIGHT)
+			valid_directions.append(RIGHT)
 		if y > 0:
-			valid_directions.append(ROT_DOWN)
+			valid_directions.append(DOWN)
 		if y < 7:
-			valid_directions.append(ROT_UP)
+			valid_directions.append(UP)
 
-		rot_direction = TRANS[self.direction]
-		valid_directions = [((d - rot_direction) % 4) for d in valid_directions]
-
-		return [INV_TRANS[d] for d in valid_directions]
+		return valid_directions
 
 	def workout_next_direction(self):
-		self.next_direction = self.valid_next_directions()[0]
+#		print "workout next direction. direction:", self.direction
+		directions = self.valid_next_directions()
+#		print "valid directions:", directions
+#		self.next_direction = directions[0]
+		self.turn(random.choice(directions))
+		self.update_remote_state()
 
 	def update(self, time):
 		self.idle_time -= time
@@ -391,35 +400,44 @@ class Dude:
 		if self.stopped:
 			return
 
-		corner = False
-		if self.direction == RIGHT or self.direction == UP:
-			# going from 0 to 1
-			forwards = True
-			nextlocation = self.location + time * self.SPEED 
-		else:
-			# going from 1 to 0
-			forwards = False
-			nextlocation = self.location - time * self.SPEED 
+		travel = time * self.SPEED
 
-		next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
+		while (travel > 1/10000.):
+			if self.direction == RIGHT or self.direction == UP:
+				# going from 0 to 1
+				forwards = True
+				nextlocation = self.location + travel
+			else:
+				# going from 1 to 0
+				forwards = False
+				nextlocation = self.location - travel
 
-		if (forwards and nextlocation > next_path_intersect) \
-			or (not forwards and nextlocation < next_path_intersect):
-			corner = True
-			if self.direction != self.next_direction:
-				# we have passed the intersect and are turning
-				new_path = self.next_intersect()
-				nextlocation = PATH_INTERSECTS[self.path]
-				self.path = new_path
-				self.direction = self.next_direction
-				if self.player_id is None:
-					self.workout_next_direction()
+			next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
 
-		if nextlocation < 0:
-			nextlocation = 0
-		elif nextlocation > 1:
-			nextlocation = 1
-		self.location = nextlocation   
+			if (forwards and nextlocation > next_path_intersect) \
+				or (not forwards and nextlocation < next_path_intersect):
 
+				if self.direction != self.next_direction:
+					# we have passed the intersect and are turning
+					new_path = self.next_intersect()
+					nextlocation = PATH_INTERSECTS[self.path]
+					self.path = new_path
+					self.direction = self.next_direction
+
+					if self.player_id is None and World.is_server:
+						print "workout"
+						self.workout_next_direction()
+
+				travelled = abs(self.location - nextlocation)
+				self.location = nextlocation
+				travel -= travelled
+			else:
+				self.location = nextlocation
+				travel = 0
+
+		if self.location < PATH_INTERSECTS[0]:
+			self.location = PATH_INTERSECTS[0]
+		elif self.location > PATH_INTERSECTS[7]:
+			self.location = PATH_INTERSECTS[7]
 
 from net import broadcast_dude_update
