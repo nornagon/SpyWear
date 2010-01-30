@@ -31,6 +31,9 @@ class Player(object):
 					GREEN: image.load('assets/Hud/body_gre.png'),
 					}
 
+	BOMB_ICONS = (image.load('assets/Lower Hud/bomb_icon_grey.png'),
+			image.load('assets/Lower Hud/bomb_icon_black.png'))
+
 	background = image.SolidColorImagePattern(color=(255, 255, 255, 255))\
 			.create_image(256, 180)
 
@@ -40,20 +43,81 @@ class Player(object):
 		self.mission_target = None
 		self.mission_cooldown = 5.0
 
-		self.death_count = 0
 		self.name = "fdsa"
 
-		self.name_label = text.Label(text = self.name,\
+		self.batch = graphics.Batch()
+
+		self.name_label = text.Label(text = self.name, batch = self.batch,\
 				font_name="Courier New", font_size=20, bold=True,\
 				color=(0,0,0,255), halign='center',\
 				x = 3, y = self.get_offset_y() + 3, width = 140, height = 40)
 
-		self.score_label = text.Label(\
+		self.score_label = text.Label(batch = self.batch,\
 				font_name="Arial Black", font_size=18,\
 				color=(0,0,0,255), halign='center',\
 				x = 150, y = self.get_offset_y() + 3, width = 103, height = 40)
 
+		self.death_count_label = text.Label(batch = self.batch,\
+				font_name="Courier New", font_size=20, bold=True,\
+				color=(0,0,0,255), halign='center',\
+				x = 3, y = self.get_offset_y() + 84, width = 84, height = 26)
+
+		self.death_count = 0
 		self.score = 0
+
+		offset_y = self.get_offset_y()
+
+		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
+				x = 3, y = offset_y + 180 - 3 - 4 - 52)
+
+		self.head = None
+		self.body = None
+
+		self.mission_sprite = None
+		self.mission_target_sprite = None
+
+	def update_dude_sprites(self):
+		if (self.head != None):
+			self.head.delete()
+			self.head = None
+
+		if (self.body != None):
+			self.body.delete()
+			self.body = None
+
+		dude = self.get_dude()
+		if (dude.outfit == HAT):
+			head = 0
+		else:
+			head = 1
+
+		offset_y = self.get_offset_y()
+
+		self.head = sprite.Sprite(self.HEAD_ICONS[dude.colour][head], batch=self.batch,
+				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43)
+		self.body = sprite.Sprite(self.BODY_ICONS[dude.colour], batch = self.batch,
+				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43 - 84)
+
+	def update_mission_sprites(self):
+		if (self.mission_sprite != None):
+			self.mission_sprite.delete()
+			self.mission_sprite = None
+
+		if (self.mission_target_sprite != None):
+			self.mission_target_sprite.delete()
+			self.mission_target_sprite = None
+
+		if self.mission != None:
+			offset_y = self.get_offset_y()
+
+			self.mission_sprite = sprite.Sprite(self.MISSION_ICONS[self.mission],
+					batch = self.batch, x = 94, y = offset_y + 180 - 63)
+
+			target_building = World.get_world().buildings[self.mission_target]
+
+			self.mission_target_sprite = sprite.Sprite(\
+					Building.BUILDING_TYPE[target_building.type][2],
+					batch = self.batch, x = 94, y = offset_y + 180 -63 - 67)
 
 	def getscore(self):
 		return self._score
@@ -64,13 +128,26 @@ class Player(object):
 
 	score = property(getscore, setscore)
 
+	def get_deaths(self):
+		return self._death_count
+
+	def set_deaths(self, value):
+		self._death_count = value
+		self.death_count_label.text = "KIA: " + str(value)
+
+	death_count = property(get_deaths, set_deaths)
+
 	def update(self, time):
+		if self.head == None:
+			self.update_dude_sprites()
+
 		self.mission_cooldown -= time
 		if self.mission_cooldown < 0.0 and self.mission == None:
 			# no mission and cooldown's up, get a new mission
 			self.mission = self.MISSION_BUILDING
 			self.mission_target = random.choice(range(16))
 			print "Player ", self.id, " has received a mission to go to ", self.mission_target
+			self.update_mission_sprites()
 
 	def get_dude(self):
 		return World.get_world().dudes[self.id]
@@ -79,36 +156,17 @@ class Player(object):
 		return 768 - ((self.id + 1) * 180)
 
 	def draw_hud(self):
-		offset_y = self.get_offset_y()
-
 		self.background.blit(0, offset_y)
 
-		self.FLAG_ICONS[self.id].blit(3, offset_y + 180 - 3 - 4 - 52)
+		self.batch.draw()
 
-		if self.mission != None:
-			self.MISSION_ICONS[self.mission].blit(94, offset_y + 180 - 63)
-			target_building = World.get_world().buildings[self.mission_target]
-			Building.BUILDING_TYPE[target_building.type][2].blit(94, offset_y + 180 -63 - 67)
-
-		dude = self.get_dude()
-		if (dude.outfit == HAT):
-			head = 0
-		else:
-			head = 1
-
-		self.HEAD_ICONS[dude.colour][head].blit(94 + 60 + 7, offset_y + 180 - 3 - 43)
-		self.BODY_ICONS[dude.colour].blit(94 + 60 + 7, offset_y + 180 - 3 - 43 - 84)
-
-		self.name_label.draw()
-		self.score_label.draw()
-
-# x = 94
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
 		self.score += 1
 		self.mission = None
 		self.mission_cooldown = 7.0
+		self.update_mission_sprites()
 
 	def mission_target_bombed(self):
 		self.mission = None
