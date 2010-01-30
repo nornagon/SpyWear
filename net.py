@@ -43,10 +43,10 @@ class GGJPeer(pb.Root):
 			broadcast_dude_update(dude_state)
 
 	def remote_explode(self, state):
-		self.world.remote_explode(building_state)
+		self.world.remote_explode(state)
 		
 		if World.is_server:
-			broadcast_building_explosion(building_state)
+			broadcast_building_explosion(state)
 
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
