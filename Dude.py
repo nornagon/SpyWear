@@ -339,9 +339,12 @@ class Dude:
 			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
+		if self.shot_cooldown > 0: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
 		dead_guy.die()
+		self.get_player().score += 1
+		self.shot_cooldown = 5
 
 	def die(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
