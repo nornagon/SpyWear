@@ -14,13 +14,8 @@ class World:
 
 		if state != None:
 			(building_state, dude_state) = state
-			for i in xrange(len(building_state)):
-				self.buildings.append(Building(i, building_state[i]))
-			print "buildings:", len(self.buildings)
-
-			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
-			print "dudes:", len(self.dudes)
-
+			self.buildings = [Building(s) for s in building_state]
+			self.dudes = [Dude(s) for s in dude_state]
 
 	def add_dude(self):
 		d = Dude(batch = self.dudes_batch)
@@ -57,13 +52,10 @@ class World:
 
 	# For net sync
 	def state(self):
-		return ([b.state() for b in self.buildings], [d.state() for d in self.dudes])
+		return ([b.state() for b in buildings], [d.state for d in dudes])
 
 class Building:
-	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
-	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
-	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
-	TYPE_RESTERANT, TYPE_TOWNHALL, TYPE_CHURCH = range(15)
+	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM, TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY = range(8)
 
 	SPRITES = {
 			TYPE_CLOTHES: image.load('assets/building.png'),
@@ -74,13 +66,6 @@ class Building:
 			TYPE_ARCADE: image.load('assets/building.png'),
 			TYPE_CARPARK: image.load('assets/building.png'),
 			TYPE_FACTORY: image.load('assets/building.png'),
-			TYPE_OFFICE: image.load('assets/building.png'),
-			TYPE_PARK: image.load('assets/building.png'),
-			TYPE_WAREHOUSE: image.load('assets/building.png'),
-			TYPE_BANK: image.load('assets/building.png'),
-			TYPE_RESTERANT: image.load('assets/building.png'),
-			TYPE_TOWNHALL: image.load('assets/building.png'),
-			TYPE_CHURCH: image.load('assets/building.png'),
 			}
 
 	def __init__(self, id, state=None):

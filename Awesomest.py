@@ -7,7 +7,7 @@ from model import *
 from net import *
 import random
 
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 WIDTH = 1024
@@ -49,11 +49,11 @@ clock.schedule(update)
 
 if len(sys.argv) >= 2 and sys.argv[1] == '-h':
 	print "server mode"
-	world_deferred = defer.maybeDeferred(server_world)
+	world = server_world()
 elif len(sys.argv) >= 2:
-	world_deferred = defer.maybeDeferred(client_world, sys.argv[1])
+	world = client_world(sys.argv[1])
 else:
-	world_deferred = defer.maybeDeferred(local_world)
+	world = local_world()
 
 def pygletPump():
 	clock.tick(poll=True)
@@ -64,11 +64,5 @@ def pygletPump():
 		window.dispatch_event('on_draw')
 		window.flip()
 
-world = None
-def run(_world):
-	global world
-	world = _world
-	LoopingCall(pygletPump).start(1/60.0)
-
-world_deferred.addCallback(run)
+LoopingCall(pygletPump).start(1/60.0)
 reactor.run()

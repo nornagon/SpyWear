@@ -63,8 +63,9 @@ class Dude:
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
+	#SPEED = 0
 
-	def __init__(self, batch=None, state=None):
+	def __init__(self, batch=None):
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -80,13 +81,7 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-
-		if state != None:
-			(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = state
-
-	def state(self):
-		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
-
+	
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
@@ -126,23 +121,41 @@ class Dude:
 			self.next_direction = new_direction
 		else:
 			self.next_direction = new_direction
- 
+                        
 	def stopstart(self):
 		self.stopped = not self.stopped
 
 	def enter(self):
-		# if near door, enter building
-		# self.path combined with location
-		
-		# else error message
-		pass
+		# self.path combined with location gives the building
+		if 0.018 < self.location < 0.190:
+			building = 1
+		elif 0.281 < self.location < 0.453:
+			building = 2
+		elif 0.544 < self.location < 0.716:
+			building = 3
+		elif 0.807 < self.location < 0.979:
+			building = 4
+		else:
+			#not near a door
+			return
+		if self.path == 0 or self.path == 1:
+			pass
+
+		elif self.path == 2 or self.path == 3:
+			pass
+
+		elif self.path == 4 or self.path == 5:
+			pass
+
+		elif self.path == 6 or self.path == 7:
+			pass
 
 	def bomb(self):
 		# if in building, set bomb
 		# if bomb in play, set off bomb
 		# else error message
 		pass
-                
+
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -186,7 +199,7 @@ class Dude:
 			nextlocation = self.location - time * self.SPEED 
 			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
 				# we have passed the intersect and are turning
-				new_path = self.next_intersect()
+                                new_path = self.next_intersect()
 				self.location = PATH_INTERSECTS[self.path]
 				self.path = new_path
 				self.direction = self.next_direction
