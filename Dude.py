@@ -74,7 +74,7 @@ class Dude:
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
 
-	def __init__(self, id=None, batch=None, state=None):
+	def __init__(self, id=None, state=None):
 		self.id = id
 		self.path = 0
 		self.location = 0.0
@@ -83,11 +83,12 @@ class Dude:
 		self.stopped = False
 		self.outfit = HAT
 		self.colour = BLUE
-		self.batch = batch
 		self.is_in_building = False
 		self.building_id = None
 		self.building_direction = UP
 		self.building_cooldown = 0.0
+
+		self.shot_cooldown = 0.0
 		
 		self.has_bomb = False
 		self.bomb_location = None
@@ -96,10 +97,10 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=batch, group=anim.GROUND)
+				batch=World.batch, group=anim.GROUND)
 		self.marker = None
 		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=batch,
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
 					group=anim.MARKER)
 
 		self.player_id = None
@@ -164,7 +165,7 @@ class Dude:
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
 		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=self.batch, group=anim.GROUND)
+				batch=World.batch, group=anim.GROUND)
 
 
 	def draw(self, window):
@@ -258,7 +259,7 @@ class Dude:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
 			for (door_path, door_location) in World.get_world().doors:
-				if door_path == self.path and (door_location - 0.057) < self.location < door_location:
+				if door_path == self.path and (door_location - 0.069) < self.location < door_location:
 					# Player is at a door and may enter
 					self.is_in_building = True
 					self.building_id = i
@@ -295,6 +296,11 @@ class Dude:
 		# no bomb
 		else:
 			print "Player has no bomb, tried to set one off"
+
+	def shoot(self):
+		dead_guy = World.get_world().nearest_dude_to(self)
+		if not dead_guy: return
+
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -349,6 +355,11 @@ class Dude:
 	def update(self, time):
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
+
+		if self.shot_cooldown > 0:
+			self.shot_cooldown -= time
+			if self.shot_cooldown < 0:
+				self.shot_cooldown = 0
 		
 		if self.is_in_building:
 			start_time = self.building_cooldown
@@ -360,7 +371,7 @@ class Dude:
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
 					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-							batch=self.batch, group=anim.GROUND)
+							batch=World.batch, group=anim.GROUND)
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
