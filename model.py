@@ -27,15 +27,11 @@ class World:
 			for i in xrange(len(building_state)):
 				self.buildings.append(Building(i, building_state[i]))
 
-			for i in xrange(len(dude_state)):
-				self.dude_state.append(Dude(i, batch=self.dudes_batch, state=dude_state[i]))
-
-# wish I could do this... :/
-#			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
+			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
 
 	def add_dude(self):
-		d = Dude(batch = self.dudes_batch)
+		d = Dude(id = len(self.dudes), batch = self.dudes_batch)
 		d.randomise()
 		self.dudes.append(d)
 
