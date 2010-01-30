@@ -477,7 +477,8 @@ class Dude:
 					self.location -= frame_distance
 
 				if (self.player_id is None and World.is_server) or \
-						(self.is_active_player() and self.idle_time == 0.):
+						(self.is_active_player() and (self.idle_time == 0. or \
+							(not self.direction in self.valid_next_directions()))):
 #					print "workout"
 					self.workout_next_direction()
 
