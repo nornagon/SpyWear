@@ -228,27 +228,25 @@ class Dude:
 		if self.direction == RIGHT or self.direction == UP:
 			# going from 0 to 1
 			nextlocation = self.location + time * self.SPEED 
-			if nextlocation >= PATH_INTERSECTS[self.next_intersect()]:
+			if nextlocation > PATH_INTERSECTS[self.next_intersect()]:
 				corner = True
 				if self.direction != self.next_direction:
 					# we have passed the intersect and are turning
 					new_path = self.next_intersect()
-					self.location = PATH_INTERSECTS[self.path]
+					nextlocation = PATH_INTERSECTS[self.path]
 					self.path = new_path
 					self.direction = self.next_direction
-			else:
-				self.location = nextlocation   
+			self.location = nextlocation   
 		else:
 			# going from 1 to 0
 			nextlocation = self.location - time * self.SPEED 
-			if nextlocation <= PATH_INTERSECTS[self.next_intersect()]:
+			if nextlocation < PATH_INTERSECTS[self.next_intersect()]:
 				corner = True
 				if self.direction != self.next_direction:
 					# we have passed the intersect and are turning
 					new_path = self.next_intersect()
-					self.location = PATH_INTERSECTS[self.path]
+					nextlocation = PATH_INTERSECTS[self.path]
 					self.path = new_path
 					self.direction = self.next_direction
-			else:
-				self.location = nextlocation
+			self.location = nextlocation
 

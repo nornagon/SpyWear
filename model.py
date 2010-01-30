@@ -1,7 +1,6 @@
 import random
 from pyglet import *
 import math
-from Dude import *
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
@@ -132,3 +131,4 @@ class Building:
 	def state(self):
 		return (self.type, self.has_bomb, self.blownup_cooldown, self.door_location)
 
+from Dude import *
