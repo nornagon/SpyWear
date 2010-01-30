@@ -58,7 +58,8 @@ class Dude:
 	TURN_UP, TURN_DOWN, TURN_LEFT, TURN_RIGHT, ENTER_BUILDING = range(5)
 
 	def load_anim(path, fps):
-		files = ['assets/' + path + '/' + p for p in os.listdir('assets/' + path)]
+		jn = os.path.join
+		files = [jn('assets', path, p) for p in os.listdir(jn('assets', path))]
 		files.sort()
 		images = [image.load(f) for f in files]
 		for img in images:
