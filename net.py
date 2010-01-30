@@ -8,6 +8,8 @@ PORT = 4444
 is_server = False
 peers = []
 
+def broadcast_dude_update(id, state
+
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
 		global is_server

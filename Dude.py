@@ -64,7 +64,8 @@ class Dude:
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
 
-	def __init__(self, batch=None, state=None):
+	def __init__(self, id, batch=None, state=None):
+		self.id = id
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -87,10 +88,12 @@ class Dude:
 			self.update_local_state(state)
 
 	def state(self):
-		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
 
 	def update_local_state(self, remotestate):
-		(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+		if id != self.id:
+			raise Exception("dude ID does not match!")
 
 	def update_remote_state(self):
 		pass
