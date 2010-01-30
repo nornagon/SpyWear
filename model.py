@@ -23,12 +23,15 @@ class World:
 		else:
 			# construct from given state
 			(building_state, dude_state) = state
+
 			for i in xrange(len(building_state)):
 				self.buildings.append(Building(i, building_state[i]))
-			print "buildings:", len(self.buildings)
 
-			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
-			print "dudes:", len(self.dudes)
+			for i in xrange(len(dude_state)):
+				self.dude_state.append(Dude(i, batch=self.dudes_batch, state=dude_state[i]))
+
+# wish I could do this... :/
+#			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
 
 
 	def add_dude(self):
