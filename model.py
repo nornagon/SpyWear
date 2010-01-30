@@ -47,6 +47,7 @@ class Player(object):
 		self.mission = None
 		self.mission_target = None
 		self.mission_cooldown = 5.0
+		self.hint_cooldown = random.random()*10 + 5
 
 		self.name = "fdsa"
 
@@ -87,6 +88,7 @@ class Player(object):
 
 		self.reveal_appearance = 0
 		self.reveal_mission = 0
+
 
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
@@ -180,7 +182,7 @@ class Player(object):
 
 		if World.is_server:
 			self.mission_cooldown -= time
-			if self.mission_cooldown < 0.0 and self.mission == None:
+			if self.mission_cooldown <= 0.0 and self.mission == None:
 				# no mission and cooldown's up, get a new mission
 				self.mission = self.MISSION_BUILDING
 				self.mission_target = random.choice(range(16))
@@ -189,13 +191,35 @@ class Player(object):
 				if self.id == World.my_player_id:
 					MISSION_ASSIGN_SOUND.play()
 
+			self.hint_cooldown -= time
+			if self.hint_cooldown <= 0.0:
+				if random.random() < 0.5:
+					broadcast_hint(self.id, 'appearance')
+				else:
+					broadcast_hint(self.id, 'mission')
+
+				self.hint_cooldown = random.random() * 10 + 7
+
 		if self.mission_sprite and not (self.reveal_mission > 0 or self.id == World.my_player_id):
 			self.mission_sprite.visible = False
+			self.mission_target_sprite.visible = False
+		else:
+			if self.mission_sprite:
+				self.mission_sprite.visible = True
+				self.mission_target_sprite.visible = True
 		if not (self.reveal_appearance > 0 or self.id == World.my_player_id):
 			if self.head:
 				self.head.visible = False
 			if self.body:
 				self.body.visible = False
+		else:
+			if self.head:
+				self.head.visible = True
+			if self.body:
+				self.body.visible = True
+
+		self.reveal_mission -= time
+		self.reveal_appearance -= time
 
 	def update_remote_state(self):
 		broadcast_player_update(self.get_state())
@@ -589,3 +613,4 @@ class Building:
 from Dude import *
 from net import broadcast_building_explosion
 from net import broadcast_player_update
+from net import broadcast_hint
