@@ -15,6 +15,8 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
+		self.players = [None, None, None, None]
+
 		if state is None:
 			# init
 			for i in xrange(16):
@@ -24,6 +26,9 @@ class World:
 
 			for i in xrange(20):
 				self.add_dude()
+
+			global my_player_id
+			my_player_id = self.allocate_new_playerid()
 		else:
 			# construct from given state
 			(building_state, dude_state) = state
@@ -43,6 +48,21 @@ class World:
 	@classmethod
 	def set_world(cls, world):
 		cls.__instance = world
+
+	def allocate_new_playerid(self, suppressUpdate=False):
+		if not None in self.players:
+			return None
+
+		player_id = self.players.index(None)
+
+		if player_id > len(self.dudes):
+			print "No dudes to take control of!"
+			return None
+
+		self.players[player_id] = player_id
+		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
+
+		return player_id
 
 
 	def add_dude(self):
@@ -80,8 +100,8 @@ class World:
 			door_location = x + doorx
 			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
                 
-	def get_player(self, myplayerID):
-		return self.dudes[myplayerID]
+	def get_player(self, player_id):
+		return self.dudes[player_id]
 
 	def draw(self, window):
 		window.clear()

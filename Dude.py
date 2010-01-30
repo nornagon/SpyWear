@@ -53,6 +53,10 @@ PATH_INTERSECTS = [path_intersect(x) for x in range(PATHS)]
 
 LEFT, RIGHT, UP, DOWN = range(4)
 
+ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
+TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
+INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
+
 class Dude:
 	HAT, COAT, SUIT = range(3)
 
@@ -91,6 +95,8 @@ class Dude:
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
 		#self.halo = sprite.Sprite(self.DUDE_HALO, batch=batch)
 
+		self.player_id = None
+
 		self.idle_time = 0.0
 
 		if state != None:
@@ -99,11 +105,23 @@ class Dude:
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
 
+		self.workout_next_direction()
+	
+	def take_control_by(self, player_id, suppressUpdate=False):
+		print "dude", self.id, "controlled by", player_id
+		self.player_id = player_id
+		self.next_direction = self.direction
+		self.idle_time = 0.0
+		self.score = 0
+		self.stopped = False
+		if not suppressUpdate:
+			self.update_remote_state()
+
 	def state(self):
-		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id)
 
 	def update_local_state(self, remotestate):
-		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score, self.player_id) = remotestate
 		if self.id is None:
 			self.id = id
 		elif id != self.id:
@@ -112,8 +130,8 @@ class Dude:
 	def update_remote_state(self):
 		broadcast_dude_update(self.state())
 
-	def isActivePlayer(self):
-		return myplayerID == self.id
+	def is_active_player(self):
+		return my_player_id == self.id
 
 	def randomise(self):
 		self.location = random.random()
@@ -203,16 +221,13 @@ class Dude:
 
 		return x
 
-	ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
-	TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
-	INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
 
-	def valid_next_direction(self):
+	def valid_next_directions(self):
 		next_intersect_id = self.next_intersect()
-		if self.row < BUILDINGS_X * 2:
-			x, y = self.row, next_intersect_id
+		if self.path < BUILDINGS_X * 2:
+			x, y = self.path, next_intersect_id
 		else:
-			y, x = self.row, next_intersect_id
+			y, x = self.path, next_intersect_id
 
 		valid_directions = []
 
@@ -230,6 +245,8 @@ class Dude:
 
 		return [INV_TRANS[d] for d in valid_directions]
 
+	def workout_next_direction(self):
+		self.next_direction = self.valid_next_directions()[0]
 
 	def update(self, time):
 		self.idle_time -= time
@@ -259,7 +276,13 @@ class Dude:
 				nextlocation = PATH_INTERSECTS[self.path]
 				self.path = new_path
 				self.direction = self.next_direction
+				if self.player_id is None:
+					self.workout_next_direction()
 
+		if nextlocation < 0:
+			nextlocation = 0
+		elif nextlocation > 1:
+			nextlocation = 1
 		self.location = nextlocation   
 
 
