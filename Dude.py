@@ -90,7 +90,8 @@ class Dude:
 
 		self.shot_cooldown = 0.0
 		
-		self.has_bomb = False
+		#self.has_bomb = False
+		self.has_bomb = True
 		self.bomb_location = None
 
 		self.mission_target = None
