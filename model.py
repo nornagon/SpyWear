@@ -5,6 +5,23 @@ import anim
 
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
+class Player:
+	def __init__(self, id):
+		self.id = id
+		self.mission = None
+		self.mission_cooldown = 5.0
+
+	def update(self, time):
+		self.mission_cooldown -= time
+		if self.mission_cooldown < 0.0 and self.mission == None:
+			# no mission and cooldown's up, get a new mission
+			self.mission = random.choice(range(16))
+			print "Player ", i, " has received a mission to go to ", self.mission
+
+	def draw_hud(self):
+		pass
+
+
 class World:
 	is_server = True
 	batch = graphics.Batch()
@@ -22,8 +39,6 @@ class World:
 		self.crosshair = sprite.Sprite(crosshair, batch=World.batch)
 
 		self.players = [None, None, None, None]
-		self.player_missions = [None, None, None, None]
-		self.player_missions_cooldown = [5.0, 5.0, 5.0, 5.0]
 
 		if state is None:
 			# init
@@ -68,7 +83,7 @@ class World:
 			print "No dudes to take control of!"
 			return None
 
-		self.players[player_id] = player_id
+		self.players[player_id] = Player(player_id)
 		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
 
 		return player_id
@@ -135,7 +150,9 @@ class World:
 	def draw(self, window):
 		# background
 		self.background.blit(256,0)
-		self.hud_mockup.blit(0,0)
+#		self.hud_mockup.blit(0,0)
+
+		self.draw_hud()
 
 		for d in self.dudes:
 			d.draw(window)
@@ -159,6 +176,11 @@ class World:
 				font_size=24, x=0, y=7)
 		label.draw()
 
+	def draw_hud(self):
+		for p in self.players:
+			if p != None:
+				p.draw_hud()
+
 	def update(self, time):
 		for b in self.buildings:
 			b.update(time)
@@ -166,12 +188,9 @@ class World:
 		for d in self.dudes:
 			d.update(time)
 			
-		for i in xrange(4):
-			self.player_missions_cooldown[i] -= time
-			if self.player_missions_cooldown[i] < 0.0 and self.player_missions[i] == None:
-				# no mission and cooldown's up, get a new mission
-				self.player_missions[i] = random.choice(range(16))
-				print "Player ", i, " has received a mission to go to ", self.player_missions[i]
+		for p in self.players:
+			if p != None:
+				p.update(time)
 
 	# For net sync
 	def state(self):
