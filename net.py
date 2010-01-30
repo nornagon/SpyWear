@@ -5,13 +5,16 @@ from model import *
 
 PORT = 4444
 
+is_server = False
 peers = []
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
-		print "newGGJPeer"
+		global is_server
+		
 		if world != None:
 			self.world = world
+			is_server = True
 		elif host != None:
 			print "Connecting to server:", host
 			factory = pb.PBClientFactory()
@@ -19,23 +22,24 @@ class GGJPeer(pb.Root):
 			d = factory.getRootObject().addCallbacks(self.connected, self.failure)
 			d.addCallbacks(self.got_world_state, self.failure)
 			self.deferred = d
+			is_server = False
 		else:
 			raise Exception("invalid peer - must be a server or a client")
 
 	def remote_update_dude(self, id, dude_state):
 		world.dudes[id].update_state(dude_state)
 
-# client calls this when it connects
-	def remote_login(self, name):
+# Server function. Client calls this when it connects
+	def remote_login(self, name, peer):
 		print "New client connected with name", name
+		peers.append(peer)
 		return (1, self.world.state())
 
 # called on client - client has connected
 	def connected(self, perspective):
-		self.perspective = perspective
 		print "Connected! Wahoo!"
-		peers.append(self)
-		return perspective.callRemote('login', "winnerer")
+		peers.append(perspective)
+		return perspective.callRemote('login', "winnerer", self)
 
 	def got_world_state(self, result):
 		print "got world state"

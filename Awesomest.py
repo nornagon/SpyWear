@@ -48,7 +48,6 @@ def update(dt):
 clock.schedule(update)
 
 if len(sys.argv) >= 2 and sys.argv[1] == '-h':
-	print "server mode"
 	world_deferred = defer.maybeDeferred(server_world)
 elif len(sys.argv) >= 2:
 	world_deferred = defer.maybeDeferred(client_world, sys.argv[1])
