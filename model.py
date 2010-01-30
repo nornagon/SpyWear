@@ -20,6 +20,8 @@ class World:
 		self.crosshair = sprite.Sprite(crosshair)
 
 		self.players = [None, None, None, None]
+		self.player_missions = [None, None, None, None]
+		self.player_missions_cooldown = [5.0, 5.0, 5.0, 5.0]
 
 		if state is None:
 			# init
@@ -160,6 +162,13 @@ class World:
 
 		for d in self.dudes:
 			d.update(time)
+			
+		for i in xrange(4):
+			self.player_missions_cooldown[i] -= time
+			if self.player_missions_cooldown[i] < 0.0 and self.player_missions[i] == None:
+				# no mission and cooldown's up, get a new mission
+				self.player_missions[i] = random.choice(range(16))
+				print "Player ", i, " has received a mission to go to ", self.player_missions[i]
 
 	# For net sync
 	def state(self):

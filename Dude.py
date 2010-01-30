@@ -93,7 +93,7 @@ class Dude:
 		self.bomb_location = None
 
 		self.mission_target = None
-		self.score = 9001
+		self.score = 0
 
 		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=batch, group=anim.GROUND)
@@ -289,7 +289,17 @@ class Dude:
 		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode()
-
+			for i in range(4)
+				if World.get_world().player_missions[i] == self.bomb_location:
+					# bomb has destroyed a mission, wipe mission for no points
+					World.get_world().player_missions[i] = None
+					World.get_world().player_missions_cooldown[i] = 7
+				if World.get_world().players[i] not None:
+					if World.get_world().dudes[i].is_in_building and World.get_world().dudes[i].building_id == self.bomb_location:
+						# a player has been caught inside the bomb blast
+						self.score += 1
+						# TODO
+			
 			self.bomb_location = None
 		
 		# no bomb
@@ -371,6 +381,13 @@ class Dude:
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False
+				if World.get_world().player_missions[self.player_id] == self.building_id:
+					# player has completed a mission in a building
+					print "Player ", self.player_id, " has completed a mission"
+					self.score += 1
+					World.get_world().player_missions[self.player_id] = None
+					World.get_world().player_missions_cooldown[self.player_id] = 7.0
+					
 				if self.building_direction == UP or self.building_direction == DOWN:
 					self.direction = RIGHT
 				else:
