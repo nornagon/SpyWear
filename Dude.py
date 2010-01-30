@@ -55,8 +55,6 @@ LEFT, RIGHT, UP, DOWN = range(4)
 class Dude:
 	HAT, COAT, SUIT = range(3)
 
-	TURN_UP, TURN_DOWN, TURN_LEFT, TURN_RIGHT, ENTER_BUILDING = range(5)
-
 	DUDE_IMG = image.load('assets/man.png')
 	DUDE_IMG.anchor_x = DUDE_IMG.width // 2
 	DUDE_IMG.anchor_y = DUDE_IMG.height // 2
@@ -220,6 +218,31 @@ class Dude:
 
 		return x
 
+	def valid_next_direction(self):
+		next_intersect_id = self.next_intersect()
+		if self.row < BUILDINGS_X * 2:
+			x, y = self.row, next_intersect_id
+		else:
+			y, x = self.row, next_intersect_id
+
+		valid_directions = []
+		
+		ROT_LEFT, ROT_UP, ROT_RIGHT, ROT_DOWN = range(4)
+
+		TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT}
+
+		if x > 0:
+			valid_directions.append(ROT_LEFT)
+		if x < 7:
+			valid_directions.append(ROT_RIGHT)
+		if y > 0:
+			valid_directions.append(ROT_DOWN)
+		if y < 7:
+			valid_directions.append(ROT_UP)
+
+		
+
+
 	def update(self, time):
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
@@ -232,14 +255,14 @@ class Dude:
 			# going from 0 to 1
 			forwards = True
 			nextlocation = self.location + time * self.SPEED 
-		else
+		else:
 			# going from 1 to 0
 			forwards = False
 			nextlocation = self.location - time * self.SPEED 
 
 		next_path_intersect = PATH_INTERSECTS[self.next_intersect()]
 
-		if (forwards and nextlocation > next_path_intersect)
+		if (forwards and nextlocation > next_path_intersect) \
 			or (not forwards and nextlocation < next_path_intersect):
 			corner = True
 			if self.direction != self.next_direction:
