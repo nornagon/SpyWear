@@ -122,6 +122,27 @@ class Dude:
 
 		self.workout_next_direction()
 
+	def state(self):
+		return (self.id, self.path, self.location, self.direction,
+				self.next_direction, self.stopped, self.outfit, self.colour,
+				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
+				self.alive, self.building_id, self.building_direction, self.building_cooldown,
+				self.is_in_building)
+
+	def update_local_state(self, remotestate):
+		(id, self.path, self.location, self.direction,
+				self.next_direction, self.stopped, self.outfit, self.colour,
+				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
+				self.alive, self.building_id, self.building_direction, self.building_cooldown,
+				self.is_in_building) = remotestate
+
+		if self.id is None:
+			self.id = id
+		elif id != self.id:
+			raise Exception("dude ID does not match!")
+
+
+
 	def respawn(self):
 		self.reset()
 
@@ -137,24 +158,7 @@ class Dude:
 		self.random_outfit()
 		self.sprite.visible = False
 		self.enter()
-		self.building_cooldown = 2
-
-	def state(self):
-		return (self.id, self.path, self.location, self.direction,
-				self.next_direction, self.stopped, self.outfit, self.colour,
-				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
-				self.alive)
-
-	def update_local_state(self, remotestate):
-		(id, self.path, self.location, self.direction, self.next_direction,
-				self.stopped, self.outfit, self.colour, self.has_bomb,
-				self.bomb_location, self.mission_target, self.player_id, self.alive) = remotestate
-
-		if self.id is None:
-			self.id = id
-		elif id != self.id:
-			raise Exception("dude ID does not match!")
-
+		self.building_cooldown = 2.
 
 	def xy(self):
 		if left_right_path(self.path):
@@ -186,6 +190,9 @@ class Dude:
 	def is_active_player(self):
 		return World.my_player_id == self.id
 
+	def am_incharge(self):
+		return self.is_active_player() or (World.is_server and self.player_id == None)
+
 	def set_sprite(self, spr):
 		if self.sprite:
 			self.sprite.delete()
@@ -215,13 +222,17 @@ class Dude:
 			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
 					group=anim.MARKER)
 
-		if self.direction == LEFT:
+		effective_direction = self.direction
+		if self.is_in_building:
+			effective_direction = self.building_direction
+
+		if effective_direction == LEFT:
 			self.sprite.rotation = -90
-		elif self.direction == RIGHT:
+		elif effective_direction == RIGHT:
 			self.sprite.rotation = 90
-		elif self.direction == UP:
+		elif effective_direction == UP:
 			self.sprite.rotation = 0
-		elif self.direction == DOWN:
+		elif effective_direction == DOWN:
 			self.sprite.rotation = 180
 
 		if self.is_in_building:
@@ -239,19 +250,11 @@ class Dude:
 				y = PATH_INTERSECTS[self.path] * 768.0
 				self.sprite.x = 256 + 1 + 766 * self.location
 				self.sprite.y = 1 + y + offset
-				if entering:
-					self.direction = UP
-				else:
-					self.direction = DOWN
 
 			elif self.building_direction == DOWN:
 				y = PATH_INTERSECTS[self.path] * 768.0
 				self.sprite.x = 256 + 1 + 766 * self.location
 				self.sprite.y = 1 + y - offset
-				if entering:
-					self.direction = DOWN
-				else:
-					self.direction = UP
 
 			# TODO
 			if self.building_direction == LEFT:
@@ -303,7 +306,6 @@ class Dude:
 
 	def enter(self):
 		if not self.is_in_building:
-			self.old_direction = self.direction
 			# Use self.path and self.location to see if we're near a door
 			i = 0
 			for (door_path, door_location) in World.get_world().doors:
@@ -326,6 +328,7 @@ class Dude:
 						# Go left
 						self.building_direction = LEFT
 					print "Player has entered building ", i, " going ", self.building_direction
+					self.update_remote_state()
 				i += 1
 		
 	def bomb(self):
@@ -527,10 +530,16 @@ class Dude:
 
 	def random_outfit(self):
 		self.outfit = random.choice([HAT, NO_HAT])
-		self.colour = random.choice([BLUE, YELLOW, GREEN])
+
+		colours = [BLUE, YELLOW, GREEN]
+		colours.remove(self.colour)
+		self.colour = random.choice(colours)
 		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		print "Changed clothes to ", self.outfit, self.colour
+
+		self.update_remote_state()
+
 
 	def update(self, time):
 		if not self.alive:
@@ -559,7 +568,9 @@ class Dude:
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
-					self.random_outfit()
+					if self.am_incharge():
+						self.random_outfit()
+
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:
@@ -575,7 +586,6 @@ class Dude:
 					# player has completed a mission in a building
 					player.complete_mission()
 
-				self.direction = self.old_direction
 				return
 			return
 		if self.stopped:

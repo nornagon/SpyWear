@@ -82,10 +82,12 @@ class Player(object):
 		self.mission_target_sprite = None
 
 	def get_state(self):
-		return (self.id, self.mission, self.mission_target, self.mission_cooldown, self.name, self.death_count, self.score)
+		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
+				self.name, self.death_count, self.score)
 
 	def set_state(self, state):
-		(id, self.mission, self.mission_target, self.mission_cooldown, self.name, self.death_count, self.score) = state
+		(id, self.mission, self.mission_target, self.mission_cooldown,\
+				self.name, self.death_count, self.score) = state
 	
 	def update_dude_sprites(self):
 		if (self.head != None):
