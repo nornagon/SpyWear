@@ -47,7 +47,7 @@ class GGJPeer(pb.Root):
 
 	def got_world_state(self, result):
 		print "got world state"
-		(playerId, state) = result
+		(self.dude_id, state) = result
 		return World(state=state)
 	
 	def failure(self, failure):
