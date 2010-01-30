@@ -158,6 +158,10 @@ class Dude:
 		else:
 			self.direction = random.randint(UP, DOWN)
 			self.next_direction = self.direction
+		self.outfit = random.choice([HAT, NO_HAT])
+		self.colour = random.choice([BLUE, YELLOW, GREEN])
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
+
 
 	def draw(self, window):
 		if self.direction == LEFT:
@@ -349,9 +353,9 @@ class Dude:
 				# End point of building travel. Buy from shop
 				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
 					# in a clothes store, get random clothes
-					self.outfit = random.choice([self.HAT, self.NO_HAT])
-					self.colour = random.choice([self.BLUE, self.YELLOW, self.GREEN])
-					
+					self.outfit = random.choice([HAT, NO_HAT])
+					self.colour = random.choice([BLUE, YELLOW, GREEN])
+					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store

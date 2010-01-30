@@ -197,7 +197,7 @@ class Building:
 
 	def __init__(self, id, state=None):
 		self.id = id
-		self.type = self.TYPE_BOMB
+		self.type = self.TYPE_CLOTHES
 		self.has_bomb = False
 		self.blownup_cooldown = 0
 
