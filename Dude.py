@@ -60,7 +60,6 @@ class Dude:
 		jn = os.path.join
 		files = glob.glob(jn('assets', path, '*.png'))
 		files.sort()
-		print files
 		images = [image.load(f) for f in files]
 		for img in images:
 			img.anchor_x = img.width // 2
