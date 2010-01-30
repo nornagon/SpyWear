@@ -180,22 +180,22 @@ class Building:
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.139, 0)),
-			TYPE_BOMB: (image.load('assets/bomb_test.png'), (0.139, 1)),
-			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.139, 1)),
-			TYPE_MUSEUM: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_DISCO: (image.load('assets/building.png'), (1, 0.139)),
-			TYPE_ARCADE: (image.load('assets/building.png'), (0, 0.139)),
-			TYPE_CARPARK: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_FACTORY: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_OFFICE: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_PARK: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_WAREHOUSE: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_BANK: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (0.139, 0)),
+			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (0.139, 1)),
+			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (0.139, 1)),
+			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (0.139, 1)),
+			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', anchor_center=False, fps=2), (1, 0.139)),
+			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (0, 0.139)),
+			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (0.139, 1)),
+			TYPE_FACTORY: (image.load('assets/Building_assets/factory_test.png'), (0.139, 1)),
+			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (0.139, 1)),
+			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', anchor_center=False, fps=2), (0.139, 1)),
+			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (0.139, 1)),
+			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (0.139, 1)),
 			TYPE_RESTAURANT: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_TOWNHALL: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_RADIO: (image.load('assets/building.png'), (0.139, 1)),
-			TYPE_CHURCH: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_TOWNHALL: (image.load('assets/Building_assets/townhall_test.png'), (0.139, 1)),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', anchor_center=False, fps=2), (0.139, 1)),
+			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (0.139, 1)),
 			}
 
 	EXPLOSION = anim.load_anim('Explosion', loop=False)

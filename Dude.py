@@ -372,9 +372,6 @@ class Dude:
 			if self.shot_cooldown < 0:
 				self.shot_cooldown = 0
 
-		#if (self.path >= 8) != (self.direction == UP or self.direction == DOWN):
-			#print 'warning! warning!'
-		
 		if self.is_in_building:
 			start_time = self.building_cooldown
 			self.building_cooldown -= time
