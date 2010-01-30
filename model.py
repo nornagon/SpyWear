@@ -47,7 +47,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			self.dudes = [Dude(batch=World.batch, state=s) for s in dude_state]
+			self.dudes = [Dude(state=s) for s in dude_state]
 
 	__instance = None
 	@classmethod
@@ -105,28 +105,28 @@ class World:
 			# left path
 			path = (building.id % 4) * 2 + 8
 			door_location = y + doory
-			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
 			self.doors.append((path, door_location))
 
 		if doorx == 1:
 			# right path
 			path = (building.id % 4) * 2 + 9
 			door_location = y + doory
-			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
 			self.doors.append((path, door_location))
 
 		if doory == 0:
 			# lower path
 			path = (building.id / 4) * 2
 			door_location = x + doorx
-			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
 			self.doors.append((path, door_location))
 
 		if doory == 1:
 			# upper path
 			path = (building.id / 4) * 2 + 1
 			door_location = x + doorx
-			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
+#			print "Door from Building ", building.id, " is on path ", path, " location: ", door_location
 			self.doors.append((path, door_location))
                 
 	def get_player(self, player_id):
@@ -179,6 +179,11 @@ class World:
 
 	def update_dude(self, dude_state):
 		self.dudes[dude_state[0]].update_local_state(dude_state)
+
+	def remote_explode(self, state):
+		terrorist_id, building_id = state
+
+		self.buildings[building_id].explode()
 
 class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
