@@ -13,7 +13,7 @@ from twisted.internet.task import LoopingCall
 WIDTH = 1024
 HEIGHT = 768
 
-AMBIENT_AUDIO =  resource.media('assets/Ambient City.wav', streaming=False)
+AMBIENT_AUDIO = resource.media('assets/Ambient City.wav', streaming=True)
 
 World.my_player_id = 0
 
@@ -81,7 +81,7 @@ def run((playerId, _world)):
 	global world
 	world = _world
 	LoopingCall(pygletPump).start(1/60.0)
-	AMBIENT_AUDIO.play()
+	AMBIENT_AUDIO.play().eos_action = media.ManagedSoundPlayer.EOS_LOOP
 
 world_deferred.addCallback(run)
 reactor.run()
