@@ -64,7 +64,7 @@ class Dude:
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
 
-	def __init__(self, batch=None):
+	def __init__(self, batch=None, state=None):
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -80,7 +80,19 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-	
+
+		if state != None:
+			self.update_local_state(state)
+
+	def state(self):
+		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+
+	def update_local_state(self, remotestate):
+		(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+
+	def update_remote_state(self):
+		pass
+
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)

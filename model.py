@@ -11,6 +11,7 @@ class World:
 		self.dudes = []
 		self.dudes_batch = graphics.Batch()
 		self.background = image.load('assets/City.png')
+		self.hud_mockup = image.load('assets/hud_mockup.png')
 
 		if state != None:
 			(building_state, dude_state) = state
@@ -35,6 +36,7 @@ class World:
 
 		# background
 		self.background.blit(256,0)
+		self.hud_mockup.blit(0,0)
 
 		for d in self.dudes:
 			d.draw(window)
@@ -63,7 +65,7 @@ class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
 	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
 	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
-	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_CHURCH = range(15)
+	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 
 	SPRITES = {
 			TYPE_CLOTHES: image.load('assets/building.png'),

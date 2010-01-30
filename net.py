@@ -5,26 +5,42 @@ from model import *
 
 PORT = 4444
 
-class GGJServer(pb.Root):
-	def __init__(self):
-		pass
+peers = []
 
+class GGJPeer(pb.Root):
+	def __init__(self, world=None, host=None):
+		print "newGGJPeer"
+		if world != None:
+			self.world = world
+		elif host != None:
+			print "Connecting to server:", host
+			factory = pb.PBClientFactory()
+			reactor.connectTCP(host, PORT, factory)
+			d = factory.getRootObject().addCallbacks(self.connected, self.failure)
+			d.addCallbacks(self.got_world_state, self.failure)
+			self.deferred = d
+		else:
+			raise Exception("invalid peer - must be a server or a client")
+
+	def remote_update_dude(self, id, dude_state):
+		world.dudes[id].update_state(dude_state)
+
+# client calls this when it connects
 	def remote_login(self, name):
-		print "New client connected"
-#		return (1, world.state())
-		return 1
+		print "New client connected with name", name
+		return (1, self.world.state())
 
-class GGJClient:
-	def __init__(self, host):
-		print "Connecting to server:", host
-		factory = pb.PBClientFactory()
-		reactor.connectTCP(host, PORT, factory)
-		factory.getRootObject().addCallbacks(self.connected, self.failure)
-
+# called on client - client has connected
 	def connected(self, perspective):
 		self.perspective = perspective
 		print "Connected! Wahoo!"
-		perspective.callRemote('login', "winnerer")
+		peers.append(self)
+		return perspective.callRemote('login', "winnerer")
+
+	def got_world_state(self, result):
+		print "got world state"
+		(playerId, state) = result
+		return World(state=state)
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"
@@ -33,15 +49,15 @@ def server_world():
 	"""This runs the protocol on port 4444"""
 	world = local_world()
 
-	factory = pb.PBServerFactory(GGJServer())
+	factory = pb.PBServerFactory(GGJPeer(world=world))
 	reactor.listenTCP(PORT, factory)
 
 	return world
 
 
 def client_world(remote_host):
-	GGJClient(remote_host)
-	return World()
+	client = GGJPeer(host=remote_host)
+	return client.deferred
 
 def local_world():
 	world = World()
@@ -49,7 +65,7 @@ def local_world():
 	for i in xrange(16):
 		world.buildings.append(Building(i))
 	
-	for i in xrange(1):
+	for i in xrange(20):
 		world.add_dude()
 
 	return world
