@@ -93,7 +93,7 @@ class Player(object):
 				self.name, self.death_count, self.score)
 
 	def set_state(self, state):
-		print "player setstate", state
+#		print "player setstate", state
 		oldmission = self.mission
 		oldmission_target = self.mission_target
 
@@ -411,7 +411,7 @@ class World:
 			self.set_player_state(s)
 	
 	def set_player_state(self, player_state):
-		print "set_player_state", player_state
+#		print "set_player_state", player_state
 
 		if player_state == None:
 			return

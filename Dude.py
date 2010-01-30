@@ -171,23 +171,24 @@ class Dude:
 
 
 	def respawn(self):
+		if not self.am_incharge():
+			return
+
 		self.reset()
 
-		if World.is_server:
-			# pick a door to come out of
-			building_id = random.randint(0,15)
-			self.path, self.location = World.get_world().doors[building_id]
-			if self.path >= 8:
-				self.direction = random.choice([UP,DOWN])
-			else:
-				self.direction = random.choice([LEFT,RIGHT])
-			self.next_direction = None
+		# pick a door to come out of
+		building_id = random.randint(0,15)
+		self.path, self.location = World.get_world().doors[building_id]
+		if self.path >= 8:
+			self.direction = random.choice([UP,DOWN])
+		else:
+			self.direction = random.choice([LEFT,RIGHT])
+		self.next_direction = None
 
-			self.random_outfit()
-			self.sprite.visible = False
-			self.enter()
-			self.building_cooldown = 2.
-			self.update_remote_state()
+		self.random_outfit(suppressUpdate = True)
+		self.enter(suppressUpdate = True)
+		self.building_cooldown = 2.
+		self.update_remote_state()
 
 	def xy(self):
 		if left_right_path(self.path):
@@ -383,7 +384,7 @@ class Dude:
 			self.stopped = not self.stopped
 			self.update_remote_state()
 
-	def enter(self):
+	def enter(self, suppressUpdate = False):
 		if not self.is_in_building:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
@@ -408,7 +409,8 @@ class Dude:
 						# Go left
 						self.building_direction = LEFT
 					print "Player has entered building ", i, " going ", self.building_direction
-					self.update_remote_state()
+					if not suppressUpdate:
+						self.update_remote_state()
 				i += 1
 		
 	def bomb(self):
@@ -629,9 +631,10 @@ class Dude:
 		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		self.sprite.visible = True
+		self.fading = False
 		self.sprite.opacity = 255
 
-	def random_outfit(self):
+	def random_outfit(self, suppressUpdate = False):
 		self.outfit = random.choice([HAT, NO_HAT])
 
 		colours = [BLUE, YELLOW, GREEN]
@@ -643,7 +646,8 @@ class Dude:
 		if (self.player_id != None):
 			self.get_player().update_dude_sprites()
 
-		self.update_remote_state()
+		if not suppressUpdate:
+			self.update_remote_state()
 
 
 	def update(self, time):
@@ -654,7 +658,8 @@ class Dude:
 					self.sprite.opacity = 255
 					self.sprite.visible = False
 					self.fading = False
-					clock.schedule_once(lambda dt: self.respawn(), 5)
+					if self.am_incharge():
+						clock.schedule_once(lambda dt: self.respawn(), 5)
 			return
 
 		if World.is_server and self.player_id is None:
