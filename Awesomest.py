@@ -66,7 +66,6 @@ def pygletPump():
 		window.dispatch_event('on_draw')
 		window.flip()
 
-world = None
 def run((playerId, _world)):
 	global myplayerID
 	myplayerID = playerId

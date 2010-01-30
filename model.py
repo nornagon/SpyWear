@@ -2,6 +2,8 @@ import random
 from pyglet import *
 import math
 
+world = None
+
 COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
 class World:
