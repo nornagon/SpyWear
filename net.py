@@ -16,6 +16,7 @@ class GGJPeer(pb.Root):
 		
 		if world != None:
 			self.world = world
+			self.unused_player_ids = range(len(self.world.dudes))
 			is_server = True
 		elif host != None:
 			print "Connecting to server:", host
@@ -35,7 +36,8 @@ class GGJPeer(pb.Root):
 	def remote_login(self, name, peer):
 		print "New client connected with name", name
 		peers.append(peer)
-		return (1, self.world.state())
+		if len(self.unused_player_ids) == 0: return None # no player IDs left!
+		return (self.unused_player_ids.pop(0), self.world.state())
 
 # called on client - client has connected
 	def connected(self, perspective):
