@@ -31,6 +31,13 @@ def broadcast_hint(playerID, attr):
 	for peer in peers:
 		peer.callRemote('hint', playerID, attr)
 
+	if attr == 'appearance':
+		print 'got appearance hint for',playerID
+		World.get_world().players[playerID].reveal_appearance = 5
+	elif attr == 'mission':
+		print 'got mission hint for',playerID
+		World.get_world().players[playerID].reveal_mission = 5
+
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
 		if world != None:
@@ -67,9 +74,11 @@ class GGJPeer(pb.Root):
 
 	def remote_hint(self, playerID, attr):
 		if attr == 'appearance':
-			World.get_world().player[playerID].reveal_appearance = 5
+			print 'got appearance hint for',playerID
+			World.get_world().players[playerID].reveal_appearance = 5
 		elif attr == 'mission':
-			World.get_world().player[playerID].reveal_mission = 5
+			print 'got mission hint for',playerID
+			World.get_world().players[playerID].reveal_mission = 5
 
 	def remote_player_state(self, state):
 		self.world.set_player_state(state)

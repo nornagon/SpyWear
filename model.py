@@ -14,13 +14,13 @@ MISSION_WIN_SOUND = resource.media('assets/Mission Complete.wav', streaming=Fals
 class Player(object):
 	FLAG_SOVIET, FLAG_UK, FLAG_US, FLAG_GERM = range(4)
 
-	FLAG_ICONS = {FLAG_SOVIET: image.load('assets/Hud/Flags/sov_flag_w.png'),
-			FLAG_UK: image.load('assets/Hud/Flags/uk_flag_w.png'),
-			FLAG_US: image.load('assets/Hud/Flags/us_flag_w.png'),
-			FLAG_GERM: image.load('assets/Hud/Flags/e_germ_flag_w.png')}
+	FLAG_ICONS = {FLAG_SOVIET: image.load('assets/New Hud/Flags/sov_flag_w.png'),
+			FLAG_UK: image.load('assets/New Hud/Flags/uk_flag_w.png'),
+			FLAG_US: image.load('assets/New Hud/Flags/us_flag_w.png'),
+			FLAG_GERM: image.load('assets/New Hud/Flags/e_germ_flag_w.png')}
 
 	MISSION_BUILDING = 0
-	MISSION_ICONS = {MISSION_BUILDING: image.load('assets/Hud/miss_enter_bldg.png'),
+	MISSION_ICONS = {MISSION_BUILDING: image.load('assets/New Hud/Mission_Icons/miss_enter_bldg.png'),
 			}
 
 	HEAD_ICONS = {BLUE: (image.load('assets/Hud/head_blu_hat.png'),
@@ -46,25 +46,26 @@ class Player(object):
 		self.mission = None
 		self.mission_target = None
 		self.mission_cooldown = 5.0
+		self.hint_cooldown = random.random()*10 + 5
 
 		self.name = "fdsa"
 
 		self.batch = graphics.Batch()
 
 		self.name_label = text.Label(text = self.name, batch = self.batch,\
-				font_name="Courier New", font_size=20, bold=True,\
+				font_name="Courier New", font_size=12, bold=True,\
 				color=(0,0,0,255), halign='center',\
-				x = 3, y = self.get_offset_y() + 3, width = 140, height = 40)
+				x = 5, y = self.get_offset_y() + 104, width = 140, height = 40)
 
 		self.score_label = text.Label(batch = self.batch,\
-				font_name="Arial Black", font_size=18,\
-				color=(0,0,0,255), halign='center',\
-				x = 150, y = self.get_offset_y() + 3, width = 103, height = 40)
+				font_name="Courier New", font_size=18, bold=True,\
+				color=(0,0,0,255), halign='right',\
+				x = 6, y = self.get_offset_y() + 13, width = 103, height = 40)
 
 		self.death_count_label = text.Label(batch = self.batch,\
-				font_name="Courier New", font_size=20, bold=True,\
+				font_name="Courier New", font_size=18, bold=True,\
 				color=(0,0,0,255), halign='center',\
-				x = 3, y = self.get_offset_y() + 84, width = 84, height = 26)
+				x = 24, y = self.get_offset_y() + 76, width = 84, height = 26)
 
 		self.death_count = 0
 		self.score = 0
@@ -81,12 +82,13 @@ class Player(object):
 		offset_y = self.get_offset_y()
 
 		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
-				x = 3, y = offset_y + 180 - 3 - 4 - 52)
+				x = 6, y = offset_y + 180 - 57)
 
 		self.background_sprite = sprite.Sprite(self.background, x = 0, y = offset_y)
 
 		self.reveal_appearance = 0
 		self.reveal_mission = 0
+
 
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
@@ -145,13 +147,13 @@ class Player(object):
 			offset_y = self.get_offset_y()
 
 			self.mission_sprite = sprite.Sprite(self.MISSION_ICONS[self.mission],
-					batch = self.batch, x = 94, y = offset_y + 180 - 63)
+					batch = self.batch, x = 112, y = offset_y + 9)
 
 			target_building = World.get_world().buildings[self.mission_target]
 
 			self.mission_target_sprite = sprite.Sprite(\
 					Building.BUILDING_TYPE[target_building.type][2],
-					batch = self.batch, x = 94, y = offset_y + 180 -63 - 67)
+					batch = self.batch, x = 182, y = offset_y + 9)
 
 	def getscore(self):
 		return self._score
@@ -167,7 +169,7 @@ class Player(object):
 
 	def set_deaths(self, value):
 		self._death_count = value
-		self.death_count_label.text = "KIA: " + str(value)
+		self.death_count_label.text = str(value)
 
 	death_count = property(get_deaths, set_deaths)
 
@@ -180,7 +182,7 @@ class Player(object):
 
 		if World.is_server:
 			self.mission_cooldown -= time
-			if self.mission_cooldown < 0.0 and self.mission == None:
+			if self.mission_cooldown <= 0.0 and self.mission == None:
 				# no mission and cooldown's up, get a new mission
 				self.mission = self.MISSION_BUILDING
 				self.mission_target = random.choice(range(16))
@@ -189,8 +191,22 @@ class Player(object):
 				if self.id == World.my_player_id:
 					MISSION_ASSIGN_SOUND.play()
 
+			self.hint_cooldown -= time
+			if self.hint_cooldown <= 0.0:
+				if random.random() < 0.5:
+					broadcast_hint(self.id, 'appearance')
+				else:
+					broadcast_hint(self.id, 'mission')
+
+				self.hint_cooldown = random.random() * 10 + 7
+
 		if self.mission_sprite and not (self.reveal_mission > 0 or self.id == World.my_player_id):
 			self.mission_sprite.visible = False
+			self.mission_target_sprite.visible = False
+		else:
+			if self.mission_sprite:
+				self.mission_sprite.visible = True
+				self.mission_target_sprite.visible = True
 		if not (self.reveal_appearance > 0 or self.id == World.my_player_id):
 			if self.head:
 #				pass
@@ -198,6 +214,14 @@ class Player(object):
 			if self.body:
 #				pass
 				self.body.visible = False
+		else:
+			if self.head:
+				self.head.visible = True
+			if self.body:
+				self.body.visible = True
+
+		self.reveal_mission -= time
+		self.reveal_appearance -= time
 
 	def update_remote_state(self):
 		broadcast_player_update(self.get_state())
@@ -459,37 +483,37 @@ class Building:
 
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (DOWN, 0.5),
-				image.load('assets/Building_Icons/clothes_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/clothes_icon.png')),
 			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/bomb_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/bomb_icon.png')),
 			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/hospital_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/hospital_icon.png')),
 			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/museum_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/museum_icon.png')),
 			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (DOWN, 0.5),
-				image.load('assets/Building_Icons/club_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/club_icon.png')),
 			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/arcade_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/arcade_icon.png')),
 			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/parking_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/parking_icon.png')),
 			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (DOWN, 0.5),
-				image.load('assets/Building_Icons/factory_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/factory_icon.png')),
 			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/office_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/office_icon.png')),
 			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (UP, 0.5),
-				image.load('assets/Building_Icons/park_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/park_icon.png')),
 			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/warehouse_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/warehouse_icon.png')),
 			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (DOWN, 0.5),
-				image.load('assets/Building_Icons/bank_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/bank_icon.png')),
 			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/cafe_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/cafe_icon.png')),
 			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (UP, 0.5),
-				image.load('assets/Building_Icons/city_hall_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/city_hall_icon.png')),
 			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (UP, 0.5),
-				image.load('assets/Building_Icons/radio_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/radio_icon.png')),
 			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (UP, 0.5),
-				image.load('assets/Building_Icons/church_icon.png')),
+				image.load('assets/New Hud/Building_Stamps/church_icon.png')),
 			}
 
 	for k in BUILDING_TYPE:
@@ -604,3 +628,4 @@ class Building:
 from Dude import *
 from net import broadcast_building_explosion
 from net import broadcast_player_update
+from net import broadcast_hint
