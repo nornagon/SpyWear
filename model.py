@@ -176,7 +176,7 @@ class Building:
 
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 0)),
-			TYPE_BOMB: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_BOMB: (image.load('assets/bomb_test.png'), (0.114, 1)),
 			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.114, 1)),
 			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
 			TYPE_DISCO: (image.load('assets/building.png'), (0.114, 1)),
