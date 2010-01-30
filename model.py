@@ -194,6 +194,7 @@ class World:
 		nearestDude = None
 		for d in self.dudes:
 			if d is dude: continue
+			if not d.alive: continue
 			x2, y2 = d.xy()
 			dy = y2 - y1
 			dx = x2 - x1

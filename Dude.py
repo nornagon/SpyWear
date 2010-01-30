@@ -66,6 +66,14 @@ class Dude:
 		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
 		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
 	}
+	DUDE_DEATHS = {
+		(HAT, BLUE): anim.load_anim('guy_dieing_blue_hat', loop=False),
+		(NO_HAT, BLUE): anim.load_anim('guy_dieing_blue_noHat', loop=False),
+		(HAT, YELLOW): anim.load_anim('guy_dieing_yellow_noHat', loop=False),
+		(NO_HAT, YELLOW): anim.load_anim('guy_dieing_yellow_hat', loop=False),
+		(HAT, GREEN): anim.load_anim('guy_dieing_green_hat', loop=False),
+		(NO_HAT, GREEN): anim.load_anim('guy_dieing_green_noHat', loop=False),
+	}
 	DUDE_MARKER = anim.load_anim('Rings', 18)
 
 	# 1/sec where sec = time to walk from one side of the map to the other
@@ -93,20 +101,19 @@ class Dude:
 
 		self.mission_target = None
 
+		self.alive = True
+
 		self.player_id = None
 
 		self.idle_time = 0.0
+
+		self.marker = None
 
 		if state != None:
 			self.update_local_state(state)
 
 		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND)
-		self.marker = None
-
-		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
-					group=anim.MARKER)
 
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
@@ -114,20 +121,20 @@ class Dude:
 		self.workout_next_direction()
 
 	def state(self):
-		return (self.id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.player_id)
+		return (self.id, self.path, self.location, self.direction,
+				self.next_direction, self.stopped, self.outfit, self.colour,
+				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
+				self.alive)
 
 	def update_local_state(self, remotestate):
-		(id, self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.player_id) = remotestate
-
-		if self.is_active_player():
-			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
-					group=anim.MARKER)
+		(id, self.path, self.location, self.direction, self.next_direction,
+				self.stopped, self.outfit, self.colour, self.has_bomb,
+				self.bomb_location, self.mission_target, self.player_id, self.alive) = remotestate
 
 		if self.id is None:
 			self.id = id
 		elif id != self.id:
 			raise Exception("dude ID does not match!")
-
 
 
 	def xy(self):
@@ -160,6 +167,11 @@ class Dude:
 	def is_active_player(self):
 		return World.my_player_id == self.id
 
+	def set_sprite(self, spr):
+		if self.sprite:
+			self.sprite.delete()
+		self.sprite = spr
+
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
@@ -171,15 +183,19 @@ class Dude:
 			self.next_direction = self.direction
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=World.batch, group=anim.GROUND)
 
+		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
 
 		self.workout_next_direction()
 
 		self.update_remote_state()
 
 	def draw(self, window):
+		if not self.marker and self.is_active_player():
+			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
+					group=anim.MARKER)
+
 		if self.direction == LEFT:
 			self.sprite.rotation = -90
 		elif self.direction == RIGHT:
@@ -188,7 +204,7 @@ class Dude:
 			self.sprite.rotation = 0
 		elif self.direction == DOWN:
 			self.sprite.rotation = 180
-		#self.halo.rotation = self.sprite.rotation
+
 		if self.is_in_building:
 			if self.building_cooldown > 2.:
 				# go in
@@ -323,8 +339,17 @@ class Dude:
 			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
+		if self.shot_cooldown > 0: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
+		dead_guy.die()
+		self.get_player().score += 1
+		self.shot_cooldown = 5
+
+	def die(self):
+		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
+		self.alive = False
 
 	def opposite(self, direction):
 		if direction == LEFT:
@@ -478,6 +503,9 @@ class Dude:
 		return World.get_world().players[self.player_id]
 
 	def update(self, time):
+		if not self.alive:
+			return
+
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
 
@@ -496,8 +524,8 @@ class Dude:
 					# in a clothes store, get random clothes
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
-					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-							batch=World.batch, group=anim.GROUND)
+					self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+							batch=World.batch, group=anim.GROUND))
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
