@@ -147,6 +147,7 @@ class Dude:
  
 	def stopstart(self):
 		self.stopped = not self.stopped
+		self.update_remote_state()
 
 	def enter(self):
 		# self.path combined with location gives the building you are walking past
