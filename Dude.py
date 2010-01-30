@@ -72,9 +72,12 @@ class Dude:
 		(HAT, GREEN): anim.load_anim('guy_dieing_green_hat', loop=False),
 		(NO_HAT, GREEN): anim.load_anim('guy_dieing_green_noHat', loop=False),
 	}
-	DUDE_MARKER = anim.load_anim('Rings', 18)
 
+	DUDE_MARKER = anim.load_anim('Rings', 18)
 	BOMB_MARKER = anim.load_anim('Bomb_Marker', 12)
+	TURN_MARKER = image.load('assets/turn_arrow.png')
+	TURN_MARKER.anchor_x = TURN_MARKER.width // 2
+	TURN_MARKER.anchor_y = TURN_MARKER.height // 2
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/15.
@@ -216,6 +219,9 @@ class Dude:
 		if not self.marker and self.is_active_player():
 			self.marker = sprite.Sprite(self.DUDE_MARKER, batch=World.batch,
 					group=anim.MARKER)
+			self.turn_marker = sprite.Sprite(self.TURN_MARKER, batch=World.batch, group=anim.GROUND)
+			self.turn_marker.visible = False
+
 
 		if self.direction == LEFT:
 			self.sprite.rotation = -90
@@ -261,21 +267,32 @@ class Dude:
 			if self.building_direction == RIGHT:
 				pass
 				
-		elif left_right_path(self.path):
-			# on a horizontal path
-			y = PATH_INTERSECTS[self.path] * 768.0
-			self.sprite.y = 1 + y
-			self.sprite.x = 256 + 1 + 768 * self.location
 		else:
-			# on a vertical path
-			x = PATH_INTERSECTS[self.path] * 768.0
-			self.sprite.x = 256 + 1 + x
-			self.sprite.y = 1 + 768 * self.location
+			if left_right_path(self.path):
+				# on a horizontal path
+				y = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.y = 1 + y
+				self.sprite.x = 256 + 1 + 768 * self.location
+			else:
+				# on a vertical path
+				x = PATH_INTERSECTS[self.path] * 768.0
+				self.sprite.x = 256 + 1 + x
+				self.sprite.y = 1 + 768 * self.location
 
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
 			self.marker.x = self.sprite.x
 			self.marker.y = self.sprite.y
+
+			if self.next_direction != None and self.next_direction != self.direction:
+				xrow, yrow = self.destination_row_coordinates()
+				x = PATH_INTERSECTS[xrow] * 768 + 256
+				y = PATH_INTERSECTS[yrow] * 768
+				self.turn_marker.x = x
+				self.turn_marker.y = y
+				self.turn_marker.visible = True
+			else:
+				self.turn_marker.visible = False
 
 
 	def forward(self):
