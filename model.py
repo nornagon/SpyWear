@@ -12,7 +12,7 @@ class World:
 	def __init__(self, state = None):
 		self.buildings = []
 		self.dudes = []
-		self.background = image.load('assets/City.png')
+		self.background = image.load('assets/city_all.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
