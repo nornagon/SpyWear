@@ -101,7 +101,7 @@ class Dude:
 			raise Exception("dude ID does not match!")
 
 	def update_remote_state(self):
-		pass
+		broadcast_dude_update(self.state())
 
 	def randomise(self):
 		self.location = random.random()
@@ -142,6 +142,8 @@ class Dude:
 			self.next_direction = new_direction
 		else:
 			self.next_direction = new_direction
+
+		self.update_remote_state()
  
 	def stopstart(self):
 		self.stopped = not self.stopped
@@ -248,4 +250,9 @@ class Dude:
 					self.path = new_path
 					self.direction = self.next_direction
 			else:
-				self.location = nextlocation   
+				self.location = nextlocation
+
+
+
+
+from net import broadcast_dude_update

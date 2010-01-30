@@ -1,14 +1,19 @@
 from twisted.internet import reactor, protocol, task
 from twisted.spread import pb
-import pyglet
 from model import *
+import pyglet
 
 PORT = 4444
 
 is_server = False
 peers = []
 
-def broadcast_dude_update(id, state
+def broadcast_dude_update(state):
+	print "broadcast"
+	id = state[0]
+	for peer in peers:
+		if peer.dude_id != id:
+			peer.callRemote('local_dude_state', state)
 
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
@@ -29,15 +34,20 @@ class GGJPeer(pb.Root):
 		else:
 			raise Exception("invalid peer - must be a server or a client")
 
-	def remote_update_dude(self, id, dude_state):
-		self.world.dudes[id].update_state(dude_state)
+	def remote_local_dude_state(self, dude_state):
+		self.world.dudes[dude_state[0]].update_state(dude_state)
+
+		if is_server:
+			broadcast_dude_update(dude_state)
+			print "server broadcast"
 
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
 		print "New client connected with name", name
 		peers.append(peer)
 		if len(self.unused_player_ids) == 0: return None # no player IDs left!
-		return (self.unused_player_ids.pop(0), self.world.state())
+		peer.dude_id = self.unused_player_ids.pop(0)
+		return (peer.dude_id, self.world.state())
 
 # called on client - client has connected
 	def connected(self, perspective):
@@ -77,3 +87,6 @@ if __name__ == '__main__':
 	update = task.LoopingCall(server_update)
 	update.start(1/60.)
 	reactor.run()
+
+
+
