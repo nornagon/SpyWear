@@ -165,7 +165,7 @@ class Building:
 		self.blownup_cooldown = 0
 
 		if state != None:
-			(self.type, self.has_bomb, self.blownup_cooldown, self.door_location) = state
+			(self.type, self.has_bomb, self.blownup_cooldown) = state
 
 		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
@@ -178,6 +178,6 @@ class Building:
 		pass
 
 	def state(self):
-		return (self.type, self.has_bomb, self.blownup_cooldown, self.door_location)
+		return (self.type, self.has_bomb, self.blownup_cooldown)
 
 from Dude import *
