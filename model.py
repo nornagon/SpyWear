@@ -7,11 +7,11 @@ COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
 
 class World:
 	is_server = True
+	batch = graphics.Batch()
 
 	def __init__(self, state = None):
 		self.buildings = []
 		self.dudes = []
-		self.dudes_batch = graphics.Batch()
 		self.background = image.load('assets/City.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
@@ -19,7 +19,7 @@ class World:
 		crosshair = image.load('assets/crosshair.png')
 		crosshair.anchor_x = crosshair.width // 2
 		crosshair.anchor_y = crosshair.height // 2
-		self.crosshair = sprite.Sprite(crosshair)
+		self.crosshair = sprite.Sprite(crosshair, batch=World.batch)
 
 		self.players = [None, None, None, None]
 
@@ -45,7 +45,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			self.dudes = [Dude(batch=self.dudes_batch, state=s) for s in dude_state]
+			self.dudes = [Dude(batch=World.batch, state=s) for s in dude_state]
 
 	__instance = None
 	@classmethod
@@ -73,7 +73,7 @@ class World:
 
 
 	def add_dude(self):
-		d = Dude(id = len(self.dudes), batch = self.dudes_batch)
+		d = Dude(id = len(self.dudes))
 		d.randomise()
 		self.dudes.append(d)
 
@@ -131,15 +131,12 @@ class World:
 		return self.dudes[player_id]
 
 	def draw(self, window):
-		window.clear()
-
 		# background
 		self.background.blit(256,0)
 		self.hud_mockup.blit(0,0)
 
 		for d in self.dudes:
 			d.draw(window)
-		self.dudes_batch.draw()
 
 		for b in self.buildings:
 			b.draw(window)
@@ -149,7 +146,11 @@ class World:
 		if nearest:
 			xy = nearest.xy()
 			self.crosshair.set_position(256 + 1 + xy[0], 1 + xy[1])
-			self.crosshair.draw()
+			self.crosshair.visible = True
+		else:
+			self.crosshair.visible = False
+
+		World.batch.draw()
 
 		# hud
 		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
@@ -179,25 +180,26 @@ class Building:
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
 
 	BUILDING_TYPE = {
-			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.114, 0)),
-			TYPE_BOMB: (image.load('assets/bomb_test.png'), (0.114, 1)),
-			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.114, 1)),
-			TYPE_MUSEUM: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_DISCO: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_ARCADE: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_CARPARK: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_FACTORY: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_OFFICE: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_PARK: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_WAREHOUSE: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_BANK: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_RESTAURANT: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_TOWNHALL: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_RADIO: (image.load('assets/building.png'), (0.114, 1)),
-			TYPE_CHURCH: (image.load('assets/building.png'), (0.114, 1)),
+			TYPE_CLOTHES: (image.load('assets/clothes_store.png'), (0.139, 0)),
+			TYPE_BOMB: (image.load('assets/bomb_test.png'), (0.139, 1)),
+			TYPE_HOSPITAL: (image.load('assets/hospital_test.png'), (0.139, 1)),
+			TYPE_MUSEUM: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_DISCO: (image.load('assets/building.png'), (1, 0.139)),
+			TYPE_ARCADE: (image.load('assets/building.png'), (0, 0.139)),
+			TYPE_CARPARK: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_FACTORY: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_OFFICE: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_PARK: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_WAREHOUSE: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_BANK: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_RESTAURANT: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_TOWNHALL: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_RADIO: (image.load('assets/building.png'), (0.139, 1)),
+			TYPE_CHURCH: (image.load('assets/building.png'), (0.139, 1)),
 			}
 
 	EXPLOSION = anim.load_anim('Explosion', loop=False)
+	DOOR_LIGHT = image.load('assets/light_beam.png')
 
 	def __init__(self, id, type=None, state=None):
 		self.id = id
@@ -208,17 +210,42 @@ class Building:
 		if state != None:
 			(self.type, self.has_bomb, self.blownup_cooldown) = state
 
-		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0])
+		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0],
+				group=anim.ROOF, batch=World.batch)
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
 		self.sprite.y = 1 + 28 + 202 * (id / 4)
+
+		self.light = sprite.Sprite(self.DOOR_LIGHT, group=anim.PATH,
+				batch=World.batch)
+		door_loc = self.BUILDING_TYPE[self.type][1]
+
+		# this just sets left/right, top/bottom
+		self.light.x = self.sprite.x + door_loc[0] * 104
+		self.light.y = self.sprite.y + door_loc[1] * 104
+
+		# now we set location on the side
+		if door_loc[0] == 0: # left-hand side
+			self.light.rotation = -90
+			self.light.y = self.sprite.y + (door_loc[1] - 0.069/2) * 768 - self.light.image.width // 2 - 28
+		elif door_loc[0] == 1: # right-hand side
+			self.light.rotation = 90
+			self.light.y = self.sprite.y + (door_loc[1] - 0.069/2) * 768 + self.light.image.width // 2 - 28
+		elif door_loc[1] == 0: # bottom side
+			self.light.rotation = 180
+			self.light.x = self.sprite.x + (door_loc[0] - 0.069/2) * 768 + self.light.image.width // 2 - 28
+		elif door_loc[1] == 1: # top side
+			self.light.rotation = 0
+			self.light.x = self.sprite.x + (door_loc[0] - 0.069/2) * 768 - self.light.image.width // 2 - 28
 
 		self.explosion_sprite = None
 		self.exploding = False
 	
 	def draw(self, window):
-		self.sprite.draw()
-		if self.explosion_sprite:
-			self.explosion_sprite.draw()
+		#self.light.draw()
+		#self.sprite.draw()
+		#if self.explosion_sprite:
+			#self.explosion_sprite.draw()
+		pass
 
 	def update(self, time):
 		pass
@@ -228,7 +255,8 @@ class Building:
 		self.BOMB_SOUND.play()
 		self.exploding = True
 		def explosion_animation(dt):
-			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY)
+			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY,
+					batch=World.batch)
 			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
 			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
 
