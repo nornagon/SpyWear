@@ -83,6 +83,7 @@ class Dude:
 		self.stopped = False
 		self.outfit = HAT
 		self.colour = BLUE
+		self.batch = batch
 		self.is_in_building = False
 		self.building_id = None
 		self.building_direction = UP
@@ -160,7 +161,7 @@ class Dude:
 			self.next_direction = self.direction
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
-		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
+		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=self.batch)
 
 
 	def draw(self, window):
@@ -355,7 +356,7 @@ class Dude:
 					# in a clothes store, get random clothes
 					self.outfit = random.choice([HAT, NO_HAT])
 					self.colour = random.choice([BLUE, YELLOW, GREEN])
-					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=batch)
+					self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)], batch=self.batch)
 					print "Changed clothes to ", self.outfit, self.colour
 				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
 					# in a bomb store
