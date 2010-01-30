@@ -458,7 +458,7 @@ class Dude:
 			pass
 		else:
 			# Killed a Player
-			World.get_world().setscore(self.id)
+			World.get_world().set_score(self.id)
 		self.shot_cooldown = 10
 
 	def die(self):
@@ -628,6 +628,8 @@ class Dude:
 	def update_sprite(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
+		self.sprite.visible = True
+		self.sprite.opacity = 255
 
 	def random_outfit(self):
 		self.outfit = random.choice([HAT, NO_HAT])
