@@ -5,25 +5,25 @@ from model import *
 #   8       9   10     11   12     13   14     15
 # 7 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |   0   |   |   1   |   |   2   |   |   3   |
+#   |  12   |   |  13   |   |  14   |   |  15   |
 #   |       |   |       |   |       |   |       |
 # 6 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 5 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |   4   |   |   5   |   |   6   |   |   7   |
+#   |   8   |   |   9   |   |  10   |   |  11   |
 #   |       |   |       |   |       |   |       |
 # 4 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 3 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |   8   |   |   9   |   |  10   |   |  11   |
+#   |   4   |   |   5   |   |   6   |   |   7   |
 #   |       |   |       |   |       |   |       |
 # 2 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
 # 1 +-------+---+-------+---+-------+---+-------+
 #   |       |   |       |   |       |   |       |
-#   |  12   |   |  13   |   |  14   |   |  15   |
+#   |   0   |   |   1   |   |   2   |   |   3   |
 #   |       |   |       |   |       |   |       |
 # 0 +-------+---+-------+---+-------+---+-------+
 BUILDINGS_X = 4
@@ -65,7 +65,7 @@ class Dude:
 	SPEED = 1/20.
 	#SPEED = 0
 
-	def __init__(self, batch=None, state=None):
+	def __init__(self, batch=None):
 		self.path = 0
 		self.location = 0.0
 		self.direction = RIGHT
@@ -81,19 +81,7 @@ class Dude:
 		self.score = 9001
 
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
-
-		if state != None:
-			self.update_local_state(state)
-
-	def state(self):
-		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
-
-	def update_local_state(self, remotestate):
-		(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
-
-	def update_remote_state(self):
-		pass
-
+	
 	def randomise(self):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
@@ -138,29 +126,43 @@ class Dude:
 		self.stopped = not self.stopped
 
 	def enter(self):
-		# self.path combined with location gives the building
+		# self.path combined with location gives the building you are walking past
 		if 0.018 < self.location < 0.190:
-			building = 1
+			building = 0
 		elif 0.281 < self.location < 0.453:
-			building = 2
+			building = 1
 		elif 0.544 < self.location < 0.716:
-			building = 3
+			building = 2
 		elif 0.807 < self.location < 0.979:
-			building = 4
+			building = 3
 		else:
 			#not near a door
 			return
 		if self.path == 0 or self.path == 1:
-			pass
+			nearest_building = building
 
 		elif self.path == 2 or self.path == 3:
-			pass
+			nearest_building = 4 +building
 
 		elif self.path == 4 or self.path == 5:
-			pass
+			nearest_building = 8 + building
 
 		elif self.path == 6 or self.path == 7:
-			pass
+			nearest_building = 12 + building
+
+		elif self.path == 8 or self.path == 9:
+			nearest_building = building * 4
+			
+		elif self.path == 10 or self.path == 11:
+			nearest_building = building * 4 + 1
+			
+		elif self.path == 12 or self.path == 13:
+			nearest_building = building * 4 + 2
+			
+		elif self.path == 14 or self.path == 15:
+			nearest_building = building * 4 + 3
+		print "I am near building ", nearest_building
+		return nearest_building
 
 	def bomb(self):
 		# if in building, set bomb

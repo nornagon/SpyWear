@@ -11,7 +11,6 @@ class World:
 		self.dudes = []
 		self.dudes_batch = graphics.Batch()
 		self.background = image.load('assets/City.png')
-		self.hud_mockup = image.load('assets/hud_mockup.png')
 
 		if state != None:
 			(building_state, dude_state) = state
@@ -31,7 +30,6 @@ class World:
 
 		# background
 		self.background.blit(256,0)
-		self.hud_mockup.blit(0,0)
 
 		for d in self.dudes:
 			d.draw(window)
@@ -57,7 +55,7 @@ class World:
 		return ([b.state() for b in buildings], [d.state for d in dudes])
 
 class Building:
-	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM, TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY = range(8)
+	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM, TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY, TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK, TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 
 	SPRITES = {
 			TYPE_CLOTHES: image.load('assets/building.png'),
@@ -68,7 +66,28 @@ class Building:
 			TYPE_ARCADE: image.load('assets/building.png'),
 			TYPE_CARPARK: image.load('assets/building.png'),
 			TYPE_FACTORY: image.load('assets/building.png'),
+			TYPE_OFFICE: image.load('assets/building.png'),
+			TYPE_PARK: image.load('assets/building.png'),
+			TYPE_WAREHOUSE: image.load('assets/building.png'),
+			TYPE_BANK: image.load('assets/building.png'),
+			TYPE_RESTAURANT: image.load('assets/building.png'),
+			TYPE_TOWNHALL: image.load('assets/building.png'),
+			TYPE_RADIO: image.load('assets/building.png'),
+			TYPE_CHURCH: image.load('assets/building.png')
 			}
+
+#     0  1  2        
+#    |-------|
+# 11 |       | 3
+#    |       |
+# 10 |       | 4
+#    |       |
+#  9 |       | 5
+#    |-------|
+#     8  7  6
+
+	door_locations = {
+                }
 
 	def __init__(self, id, state=None):
 		self.id = id
@@ -78,7 +97,7 @@ class Building:
 		self.blownup_cooldown = 0
 
 		if state != None:
-			(self.type, self.has_bomb, self.blownup_cooldown) = state
+			(self.type, self.has_bomb, self.blownup_cooldown, self.door_location) = state
 
 		self.sprite = sprite.Sprite(self.SPRITES[self.type])
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4)
@@ -91,5 +110,5 @@ class Building:
 		pass
 
 	def state(self):
-		return (self.type, self.has_bomb, self.blownup_cooldown)
+		return (self.type, self.has_bomb, self.blownup_cooldown, self.door_location)
 
