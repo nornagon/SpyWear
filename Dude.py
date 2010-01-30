@@ -338,19 +338,7 @@ class Dude:
 		elif self.bomb_location != None:
 			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode()
-			for player in World.get_world().players:
-				if player == None:
-					continue
-
-				if player.mission_target == self.bomb_location:
-					# bomb has destroyed a mission, wipe mission for no points
-					player.mission_target_bombed()
-
-				dude = player.get_dude()
-				if dude.is_in_building and dude.building_id == self.bomb_location:
-					# a player has been caught inside the bomb blast
-					self.get_player().score += 1
-			
+			self.has_bomb = False
 			self.bomb_location = None
 		
 		# no bomb
@@ -365,7 +353,7 @@ class Dude:
 		self.get_player().score += 1
 		self.shot_cooldown = 5
 
-	def die(self):
+	def die(self, suppress_announce=False):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		@self.sprite.event

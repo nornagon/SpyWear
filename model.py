@@ -469,6 +469,20 @@ class Building:
 			self.explosion_sprite.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
 			self.explosion_sprite.y = 1 + 28 + 202 * (self.id / 4) + 104/2
 
+			for player in World.get_world().players:
+				if player == None:
+					continue
+
+				if player.mission_target == self.id:
+					# bomb has destroyed a mission, wipe mission for no points
+					player.mission_target_bombed()
+
+				dude = player.get_dude()
+				if dude.is_in_building and dude.building_id == self.bomb_location:
+					# a player has been caught inside the bomb blast
+					self.get_player().score += 1
+					dude.die(supress_announce=not is_server)
+
 			@self.explosion_sprite.event
 			def on_animation_end():
 				del self.explosion_sprite
