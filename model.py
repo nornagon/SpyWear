@@ -3,23 +3,86 @@ from pyglet import *
 import math
 import anim
 
-COLOUR_RED, COLOUR_BLUE, COLOUR_GREEN = range(3)
+BLUE, YELLOW, GREEN = range(3)
+HAT, NO_HAT = range(2)
 
 class Player:
+	FLAG_SOVIET, FLAG_UK, FLAG_US, FLAG_GERM = range(4)
+
+	FLAG_ICONS = {FLAG_SOVIET: image.load('assets/Hud/Flags/sov_flag_w.png'),
+			FLAG_UK: image.load('assets/Hud/Flags/uk_flag_w.png'),
+			FLAG_US: image.load('assets/Hud/Flags/us_flag_w.png'),
+			FLAG_GERM: image.load('assets/Hud/Flags/e_germ_flag_w.png')}
+
+	MISSION_BUILDING = 0
+	MISSION_ICONS = {MISSION_BUILDING: image.load('assets/Hud/miss_enter_bldg.png'),
+			}
+
+	HEAD_ICONS = {BLUE: (image.load('assets/Hud/head_blu_hat.png'),
+							image.load('assets/Hud/head_blu_nohat.png')),
+					YELLOW: (image.load('assets/Hud/head_yel_hat.png'),
+							image.load('assets/Hud/head_yel_nohat.png')),
+					GREEN: (image.load('assets/Hud/head_gre_hat.png'),
+							image.load('assets/Hud/head_gre_nohat.png')),
+					}
+
+	BODY_ICONS = {BLUE: image.load('assets/Hud/body_blu.png'),
+					YELLOW: image.load('assets/Hud/body_yel.png'),
+					GREEN: image.load('assets/Hud/body_gre.png'),
+					}
+
+	background = image.SolidColorImagePattern(color=(255, 255, 255, 255))\
+			.create_image(256, 180)
+
+
 	def __init__(self, id):
 		self.id = id
 		self.mission = None
+		self.mission_target = None
 		self.mission_cooldown = 5.0
+		self.score = 0
 
 	def update(self, time):
 		self.mission_cooldown -= time
 		if self.mission_cooldown < 0.0 and self.mission == None:
 			# no mission and cooldown's up, get a new mission
-			self.mission = random.choice(range(16))
-			print "Player ", i, " has received a mission to go to ", self.mission
+			self.mission = self.MISSION_BUILDING
+			self.mission_target = random.choice(range(16))
+			print "Player ", self.id, " has received a mission to go to ", self.mission_target
+
+	def get_dude(self):
+		return World.get_world().dudes[self.id]
 
 	def draw_hud(self):
-		pass
+		offset_y = 768 - ((self.id + 1) * 180)
+
+		self.background.blit(0, offset_y)
+
+		self.FLAG_ICONS[self.id].blit(3, offset_y + 180 - 3 - 4 - 52)
+
+		if self.mission != None:
+			self.MISSION_ICONS[self.mission].blit(94, offset_y + 180 - 63)
+
+		dude = self.get_dude()
+		if (dude.outfit == HAT):
+			head = 0
+		else:
+			head = 1
+
+		self.HEAD_ICONS[dude.colour][head].blit(94 + 60 + 7, offset_y + 180 - 3 - 43)
+
+# x = 94
+
+	def complete_mission(self):
+		print "Player ", self.id, " has completed a mission"
+		self.score += 1
+		World.get_world().player_missions[self.player_id] = None
+		World.get_world().player_missions_cooldown[self.player_id] = 7.0
+
+	def mission_target_bombed(self):
+		self.mission = None
+		self.mission_cooldown = 7.
+
 
 
 class World:
