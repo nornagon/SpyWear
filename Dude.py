@@ -39,6 +39,7 @@ LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
 CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
 
+
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
 
