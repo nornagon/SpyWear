@@ -366,6 +366,7 @@ class Dude:
 		self.shot_cooldown = 5
 
 	def die(self):
+		print "some dude way died"
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 		@self.sprite.event

@@ -20,6 +20,13 @@ def broadcast_building_explosion(state):
 	terrorist_id, building_id = state
 	broadcast_state(state, 'explode', suppressId = terrorist_id)
 
+def broadcast_die(victim):
+	broadcast_state(victim, 'die')
+
+def broadcast_player_update(state):
+	id = state[0]
+	broadcast_state(state, 'player_state', suppressId = id)
+
 class GGJPeer(pb.Root):
 	def __init__(self, world=None, host=None):
 		if world != None:
@@ -48,11 +55,24 @@ class GGJPeer(pb.Root):
 		if World.is_server:
 			broadcast_building_explosion(state)
 
+	def remote_die(self, victim):
+		self.world.dudes[victim].die()
+		if World.is_server:
+			broadcast_die(victim)
+
+	def remote_player_state(self, state):
+		self.world.set_player_state(state)
+		if World.is_server:
+			broadcast_player_update(state)
+
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
 		print "New client connected with name", name
-		peers.append(peer)
+
 		peer.dude_id = self.world.allocate_new_playerid(suppressUpdate = True)
+		peers.append(peer)
+		print "new peer id allocated:", peer.dude_id
+		print [p.dude_id for p in peers]
 
 		return (peer.dude_id, self.world.state())
 

@@ -39,7 +39,7 @@ class Player(object):
 	background = image.SolidColorImagePattern(color=(255, 255, 255, 255))\
 			.create_image(256, 180)
 
-	def __init__(self, id):
+	def __init__(self, id, state = None):
 		self.id = id
 		self.mission = None
 		self.mission_target = None
@@ -67,6 +67,9 @@ class Player(object):
 		self.death_count = 0
 		self.score = 0
 
+		if state != None:
+			self.set_state(state)
+
 		offset_y = self.get_offset_y()
 
 		self.flag = sprite.Sprite(self.FLAG_ICONS[self.id], batch=self.batch,
@@ -78,6 +81,12 @@ class Player(object):
 		self.mission_sprite = None
 		self.mission_target_sprite = None
 
+	def get_state(self):
+		return (self.id, self.mission, self.mission_target, self.mission_cooldown, self.name, self.death_count, self.score)
+
+	def set_state(self, state):
+		(id, self.mission, self.mission_target, self.mission_cooldown, self.name, self.death_count, self.score) = state
+	
 	def update_dude_sprites(self):
 		if (self.head != None):
 			self.head.delete()
@@ -173,8 +182,6 @@ class Player(object):
 		self.mission = None
 		self.mission_cooldown = 7.
 
-
-
 class World:
 	is_server = True
 	batch = graphics.Batch()
@@ -202,13 +209,13 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(2):
+			for i in xrange(20):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()
 		else:
 			# construct from given state
-			(building_state, dude_state) = state
+			(building_state, dude_state, player_state) = state
 
 			for i in xrange(len(building_state)):
 				building = Building(i, state=building_state[i])
@@ -216,6 +223,8 @@ class World:
 				self.add_door(building)
 
 			self.dudes = [Dude(state=s) for s in dude_state]
+
+			self.set_player_state(player_state)
 
 	__instance = None
 	@classmethod
@@ -238,6 +247,8 @@ class World:
 
 		self.players[player_id] = Player(player_id)
 		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
+
+		broadcast_player_update(self.get_player_state())
 
 		return player_id
 
@@ -292,7 +303,7 @@ class World:
 			door_location = x + (dooroffset * 104)/768.0
 			self.doors.append((path, door_location))
                 
-	def get_player(self, player_id):
+	def get_player_dude(self, player_id):
 		return self.dudes[player_id]
 
 	def draw(self, window):
@@ -308,7 +319,7 @@ class World:
 		for b in self.buildings:
 			b.draw(window)
 
-		player = self.get_player(World.my_player_id)
+		player = self.get_player_dude(World.my_player_id)
 		nearest = self.nearest_dude_to(player)
 		if nearest:
 			xy = nearest.xy()
@@ -340,9 +351,23 @@ class World:
 			if p != None:
 				p.update(time)
 
+	def get_player_state(self):
+		return [p and p.get_state() or None for p in self.players]
+
+	def set_player_state(self, player_state):
+		for i in xrange(len(self.players)):
+			if player_state[i] != None and self.players[i] == None:
+				self.players[i] = Player(id = i, state = player_state[i])
+			elif player_state[i] == None and self.players[i] != None:
+				self.players[i] = None
+			elif player_state[i] != None and self.players[i] != None:
+				self.players[i].set_state(player_state[i])
+
 	# For net sync
 	def state(self):
-		return ([b.state() for b in self.buildings], [d.state() for d in self.dudes])
+		return ([b.state() for b in self.buildings],
+				[d.state() for d in self.dudes],
+				self.get_player_state())
 
 	def update_dude(self, dude_state):
 		self.dudes[dude_state[0]].update_local_state(dude_state)
@@ -482,3 +507,4 @@ class Building:
 
 from Dude import *
 from net import broadcast_building_explosion
+from net import broadcast_player_update
