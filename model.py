@@ -43,8 +43,6 @@ class Player(object):
 		self.death_count = 0
 		self.name = "fdsa"
 
-		self._score = 0
-
 		self.name_label = text.Label(text = self.name,\
 				font_name="Courier New", font_size=20, bold=True,\
 				color=(0,0,0,255), halign='center',\
@@ -62,7 +60,7 @@ class Player(object):
 
 	def setscore(self, value):
 		self._score = value
-		self.score_label.text = "S: " + str(value)
+		self.score_label.text = str(value * 1000)
 
 	score = property(getscore, setscore)
 
