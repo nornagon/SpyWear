@@ -82,10 +82,16 @@ class Dude:
 		self.sprite = sprite.Sprite(self.DUDE_IMG, batch=batch)
 
 		if state != None:
-			(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = state
+			self.update_local_state(state)
 
 	def state(self):
 		return (self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score)
+
+	def update_local_state(self, remotestate):
+		(self.path, self.location, self.direction, self.next_direction, self.stopped, self.outfit, self.colour, self.has_bomb, self.bomb_location, self.mission_target, self.score) = remotestate
+
+	def update_remote_state(self):
+		pass
 
 	def randomise(self):
 		self.location = random.random()
