@@ -63,7 +63,6 @@ class Dude:
 
 	# 1/sec where sec = time to walk from one side of the map to the other
 	SPEED = 1/20.
-	#SPEED = 0
 
 	def __init__(self, batch=None, state=None):
 		self.path = 0
@@ -133,7 +132,7 @@ class Dude:
 			self.next_direction = new_direction
 		else:
 			self.next_direction = new_direction
-                        
+ 
 	def stopstart(self):
 		self.stopped = not self.stopped
 
@@ -167,7 +166,7 @@ class Dude:
 		# if bomb in play, set off bomb
 		# else error message
 		pass
-
+                
 	def opposite(self, direction):
 		if direction == LEFT:
 			return RIGHT
@@ -211,7 +210,7 @@ class Dude:
 			nextlocation = self.location - time * self.SPEED 
 			if nextlocation < PATH_INTERSECTS[self.next_intersect()] and self.direction != self.next_direction:
 				# we have passed the intersect and are turning
-                                new_path = self.next_intersect()
+				new_path = self.next_intersect()
 				self.location = PATH_INTERSECTS[self.path]
 				self.path = new_path
 				self.direction = self.next_direction
