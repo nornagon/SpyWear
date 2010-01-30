@@ -12,7 +12,7 @@ def broadcast_dude_update(state):
 	print "broadcast"
 	id = state[0]
 	for peer in peers:
-		if peer.dude_id != id:
+		if not is_server or peer.dude_id != id:
 			peer.callRemote('local_dude_state', state)
 
 class GGJPeer(pb.Root):
