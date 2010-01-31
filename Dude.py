@@ -448,7 +448,7 @@ class Dude:
 			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
-		if self.shot_cooldown > 0: return
+		if self.shot_cooldown > 0 or not self.alive: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
 		broadcast_die(World.my_player_id, dead_guy.id)
