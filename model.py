@@ -92,12 +92,10 @@ class Player(object):
 		self.reveal_mission = 0
 		self.skull_sprite = None
 
-		if World.my_player_id == self.id:
-			self.player_border_sprite = sprite.Sprite(self.player_border, x = 0, y = self.get_offset_y())
-			self.bomb_sprite = sprite.Sprite(self.BOMB_ICONS[1], x=0, y=0)
-			self.shot_sprite = sprite.Sprite(self.SHOT, x=208, y=0)
-
-
+#		if World.my_player_id == self.id:
+		self.player_border_sprite = sprite.Sprite(self.player_border, x = 0, y = self.get_offset_y())
+		self.bomb_sprite = sprite.Sprite(self.BOMB_ICONS[1], x=0, y=0)
+		self.shot_sprite = sprite.Sprite(self.SHOT, x=208, y=0)
 
 	def get_state(self):
 		return (self.id, self.mission, self.mission_target, self.mission_cooldown,\
