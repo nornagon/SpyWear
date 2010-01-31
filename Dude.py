@@ -206,7 +206,7 @@ class Dude:
 		self.idle_time = 20.0
 	
 	def take_control_by(self, player_id, suppressUpdate=False):
-		print "dude", self.id, "controlled by", player_id
+#		print "dude", self.id, "controlled by", player_id
 		self.player_id = player_id
 		self.next_direction = self.direction
 		self.idle_time = 0.0
@@ -345,7 +345,7 @@ class Dude:
 					m = self.turn_marker_flip
 					m.rotation = 0
 				else:
-					print self.direction, self.next_direction
+#					print self.direction, self.next_direction
 
 				for b in [self.turn_marker, self.turn_marker_flip]:
 					if m is b:
@@ -408,7 +408,7 @@ class Dude:
 					elif self.path >= 8 and self.path % 2 == 1:
 						# Go left
 						self.building_direction = LEFT
-					print "Player has entered building ", i, " going ", self.building_direction
+#					print "Player has entered building ", i, " going ", self.building_direction
 					if not suppressUpdate:
 						self.update_remote_state()
 				i += 1
@@ -432,11 +432,11 @@ class Dude:
 
 			self.has_bomb = False
 			ARM_BOMB_SOUND.play()
-			print "laid bomb in building ", self.building_id
+#			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
 		elif self.bomb_location != None and self.alive:
-			print "Set off bomb in building ", self.bomb_location
+#			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode(self.id)
 			self.has_bomb = False
 			if not (self.is_in_building and self.building_id == self.bomb_location):
@@ -445,7 +445,7 @@ class Dude:
 			self.bomb_location = None
 		# no bomb
 		else:
-			print "Player has no bomb, tried to set one off"
+#			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
 		if self.shot_cooldown > 0 or not self.alive: return
@@ -643,7 +643,7 @@ class Dude:
 		colours.remove(self.colour)
 		self.colour = random.choice(colours)
 		self.update_sprite()
-		print "Changed clothes to ", self.outfit, self.colour
+#		print "Changed clothes to ", self.outfit, self.colour
 
 		if (self.player_id != None):
 			self.get_player().update_dude_sprites()
@@ -698,11 +698,11 @@ class Dude:
 					# in a bomb store
 					if self.has_bomb == False and self.bomb_location == None:
 						# purchase a bomb
-						print "Picked up a bomb"
+#						print "Picked up a bomb"
 						self.has_bomb = True
 						CASH_SOUND.play()
 			if self.building_cooldown < 0:
-				print "finished in building, moving on"
+#				print "finished in building, moving on"
 				self.is_in_building = False
 				player = self.get_player()
 				DOOR_CLOSE_SOUND.play()
@@ -724,7 +724,7 @@ class Dude:
 			self.location = PATH_INTERSECTS[7]
 
 		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
-			print "Wargh direction set wrong"
+#			print "Wargh direction set wrong"
 
 
 from net import broadcast_dude_update, broadcast_die

@@ -37,6 +37,8 @@ class Player(object):
 
 	background = image.load('assets/New Hud/hud_background.png')
 
+	skull = image.load('assets/new Hud/death_marker.png')
+
 	def __init__(self, id, state = None):
 		self.id = id
 		self.mission = None
@@ -83,6 +85,7 @@ class Player(object):
 
 		self.reveal_appearance = 0
 		self.reveal_mission = 0
+		self.skull_sprite = None
 
 
 	def get_state(self):
@@ -216,6 +219,16 @@ class Player(object):
 
 		self.batch.draw()
 
+		if not self.get_dude().alive:
+			if self.skull_sprite == None:
+				self.skull_sprite = sprite.Sprite(self.skull, 0, self.get_offset_y())
+
+			self.skull_sprite.draw()
+		elif self.get_dude().alive and self.skull_sprite != None:
+			self.skull_sprite.delete()
+			self.skull_sprite = None
+		
+
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
 		MISSION_WIN_SOUND.play()
@@ -260,7 +273,7 @@ class World:
 				self.buildings.append(building)
 				self.add_door(building)
 
-			for i in xrange(3):
+			for i in xrange(20):
 				self.add_dude()
 
 			World.my_player_id = self.allocate_new_playerid()
