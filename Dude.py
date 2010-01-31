@@ -38,7 +38,7 @@ LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
 LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
 CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
-
+KILL_SOUND = resource.media('assets/Pistol Kill.wav', streaming=False)
 
 def left_right_path(path):
 	return path < (BUILDINGS_X * 2)
@@ -111,8 +111,6 @@ class Dude:
 		self.has_bomb = True
 		self.bomb_location = None
 
-		self.mission_target = None
-
 		self.alive = True
 		self.fading = False
 
@@ -128,11 +126,11 @@ class Dude:
 
 		self.marker = None
 
-		if state != None:
-			self.update_local_state(state)
-
 		self.sprite = sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND)
+
+		if state != None:
+			self.update_local_state(state)
 
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
@@ -142,16 +140,23 @@ class Dude:
 	def state(self):
 		return (self.id, self.path, self.location, self.direction,
 				self.next_direction, self.stopped, self.outfit, self.colour,
-				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
+				self.has_bomb, self.bomb_location, self.player_id,
 				self.alive, self.building_id, self.building_direction, self.building_cooldown,
 				self.is_in_building)
 
 	def update_local_state(self, remotestate):
+		old_alive = self.alive
+		old_outfit = self.outfit
+		old_colour = self.colour
+
 		(id, self.path, self.location, self.direction,
 				self.next_direction, self.stopped, self.outfit, self.colour,
-				self.has_bomb, self.bomb_location, self.mission_target, self.player_id,
+				self.has_bomb, self.bomb_location, self.player_id,
 				self.alive, self.building_id, self.building_direction, self.building_cooldown,
 				self.is_in_building) = remotestate
+
+		if self.alive and (old_alive != self.alive or old_outfit != self.outfit or old_colour != self.colour):
+			self.update_sprite()
 
 		if (self.player_id != None):
 			player = self.get_player()
@@ -166,23 +171,24 @@ class Dude:
 
 
 	def respawn(self):
+		if not self.am_incharge():
+			return
+
 		self.reset()
 
-		if World.is_server:
-			# pick a door to come out of
-			building_id = random.randint(0,15)
-			self.path, self.location = World.get_world().doors[building_id]
-			if self.path >= 8:
-				self.direction = random.choice([UP,DOWN])
-			else:
-				self.direction = random.choice([LEFT,RIGHT])
-			self.next_direction = None
+		# pick a door to come out of
+		building_id = random.randint(0,15)
+		self.path, self.location = World.get_world().doors[building_id]
+		if self.path >= 8:
+			self.direction = random.choice([UP,DOWN])
+		else:
+			self.direction = random.choice([LEFT,RIGHT])
+		self.next_direction = None
 
-			self.random_outfit()
-			self.sprite.visible = False
-			self.enter()
-			self.building_cooldown = 2.
-			self.update_remote_state()
+		self.random_outfit(suppressUpdate = True)
+		self.enter(suppressUpdate = True)
+		self.building_cooldown = 2.
+		self.update_remote_state()
 
 	def xy(self):
 		if left_right_path(self.path):
@@ -221,6 +227,7 @@ class Dude:
 		if self.sprite:
 			self.sprite.delete()
 		self.sprite = spr
+		self.sprite.visible = True
 
 	def randomise(self):
 		self.location = random.random()
@@ -377,7 +384,7 @@ class Dude:
 			self.stopped = not self.stopped
 			self.update_remote_state()
 
-	def enter(self):
+	def enter(self, suppressUpdate = False):
 		if not self.is_in_building:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
@@ -402,7 +409,8 @@ class Dude:
 						# Go left
 						self.building_direction = LEFT
 					print "Player has entered building ", i, " going ", self.building_direction
-					self.update_remote_state()
+					if not suppressUpdate:
+						self.update_remote_state()
 				i += 1
 		
 	def bomb(self):
@@ -427,14 +435,14 @@ class Dude:
 			print "laid bomb in building ", self.building_id
 		
 		# if bomb in play, set off bomb
-		elif self.bomb_location != None:
+		elif self.bomb_location != None and self.alive:
 			print "Set off bomb in building ", self.bomb_location
-			World.get_world().buildings[self.bomb_location].explode()
+			World.get_world().buildings[self.bomb_location].explode(self.id)
 			self.has_bomb = False
+			if not (self.is_in_building and self.building_id == self.bomb_location):
+				laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
+				clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
-			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
-			clock.schedule_once(lambda dt: laugh.play(), 1.0)
-		
 		# no bomb
 		else:
 			print "Player has no bomb, tried to set one off"
@@ -445,8 +453,15 @@ class Dude:
 		if not dead_guy: return
 		broadcast_die(World.my_player_id, dead_guy.id)
 		dead_guy.die()
-		self.get_player().score += 1
-		self.shot_cooldown = 5
+		KILL_SOUND.play()
+		if dead_guy.player_id == None:
+			# Killed a Civilian
+			# TODO: Fire off a hint about self.player()
+			pass
+		else:
+			# Killed a Player
+			World.get_world().set_score(self.id)
+		self.shot_cooldown = 10
 
 	def die(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
@@ -612,20 +627,27 @@ class Dude:
 		else:
 			return world.players[self.player_id]
 
-	def random_outfit(self):
+	def update_sprite(self):
+		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
+				batch=World.batch, group=anim.GROUND))
+		self.sprite.visible = True
+		self.fading = False
+		self.sprite.opacity = 255
+
+	def random_outfit(self, suppressUpdate = False):
 		self.outfit = random.choice([HAT, NO_HAT])
 
 		colours = [BLUE, YELLOW, GREEN]
 		colours.remove(self.colour)
 		self.colour = random.choice(colours)
-		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
-				batch=World.batch, group=anim.GROUND))
+		self.update_sprite()
 		print "Changed clothes to ", self.outfit, self.colour
 
 		if (self.player_id != None):
 			self.get_player().update_dude_sprites()
 
-		self.update_remote_state()
+		if not suppressUpdate:
+			self.update_remote_state()
 
 
 	def update(self, time):
@@ -636,7 +658,8 @@ class Dude:
 					self.sprite.opacity = 255
 					self.sprite.visible = False
 					self.fading = False
-					clock.schedule_once(lambda dt: self.respawn(), 5)
+					if self.am_incharge():
+						clock.schedule_once(lambda dt: self.respawn(), 5)
 			return
 
 		if World.is_server and self.player_id is None:
@@ -675,6 +698,7 @@ class Dude:
 						# purchase a bomb
 						print "Picked up a bomb"
 						self.has_bomb = True
+						CASH_SOUND.play()
 			if self.building_cooldown < 0:
 				print "finished in building, moving on"
 				self.is_in_building = False

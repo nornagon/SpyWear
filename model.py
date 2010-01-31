@@ -90,7 +90,7 @@ class Player(object):
 				self.name, self.death_count, self.score)
 
 	def set_state(self, state):
-		print "player setstate", state
+#		print "player setstate", state
 		oldmission = self.mission
 		oldmission_target = self.mission_target
 
@@ -356,6 +356,10 @@ class World:
                 
 	def get_player_dude(self, player_id):
 		return self.dudes[player_id]
+		
+	def set_score(self, player_id, increment = 1):
+		self.players[player_id].score += increment
+		self.players[player_id].update_remote_state()
 
 	def draw(self, window):
 		# background
@@ -410,7 +414,7 @@ class World:
 			self.set_player_state(s)
 	
 	def set_player_state(self, player_state):
-		print "set_player_state", player_state
+#		print "set_player_state", player_state
 
 		if player_state == None:
 			return
@@ -438,13 +442,13 @@ class World:
 	def remote_explode(self, state):
 		terrorist_id, building_id = state
 		(x,y) = self.dudes[terrorist_id].xy()
-		(myx, myy) = self.dudes[self.player_id].xy()
+		(myx, myy) = self.dudes[self.my_player_id].xy()
 		d = math.sqrt((x-myx)^2 + (y-myy)^2)
 		if d < 100:
 			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
 			clock.schedule_once(explosion_animation, 1.0)
 
-		self.buildings[building_id].explode()
+		self.buildings[building_id].explode(terrorist_id)
 
 class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
@@ -453,6 +457,8 @@ class Building:
 	TYPE_RESTAURANT, TYPE_TOWNHALL, TYPE_RADIO, TYPE_CHURCH = range(16)
 	
 	BOMB_SOUND = resource.media('assets/Bomb Detonation.wav', streaming=False)
+	DEATH_SCREAM = resource.media('assets/Death Scream.wav', streaming=False)
+	CIV_SCREAM = resource.media('assets/Scream 1.wav', streaming=False)
 
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (DOWN, 0.5),
@@ -555,7 +561,7 @@ class Building:
 		y = 1 + 28 + 202 * (self.id / 4) + 104/2
 		return (x,y)
 
-	def explode(self):
+	def explode(self, terrorist_id):
 		if self.exploding: return
 		
 		broadcast_building_explosion((World.my_player_id, self.id))
@@ -574,11 +580,18 @@ class Building:
 					# bomb has destroyed a mission, wipe mission for no points
 					player.mission_target_bombed()
 
-				dude = player.get_dude()
-				if dude.is_in_building and dude.building_id == self.bomb_location:
-					# a player has been caught inside the bomb blast
-					self.get_player().score += 1
-					dude.die(supress_announce=not is_server)
+				for dude in World.get_world().dudes:
+					if dude.is_in_building and dude.building_id == self.id:
+						# a player has been caught inside the bomb blast
+						dude.die()
+						if dude.player_id == None:
+							# Killed a civilian
+							self.CIV_SCREAM.play() #TODO send out hint about detonator
+						else:
+							# Killed a Player that is not you
+							if World.get_world().is_server and terrorist_id != dude.player_id:
+								World.get_world().set_score(terrorist_id)
+							self.DEATH_SCREAM.play()
 
 			@self.explosion_sprite.event
 			def on_animation_end():
