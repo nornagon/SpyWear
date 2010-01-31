@@ -460,7 +460,7 @@ class Dude:
 		else:
 			# Killed a Player
 			World.get_world().set_score(self.id)
-		self.shot_cooldown = 10
+		self.shot_cooldown = 5.
 
 	def die(self):
 		self.set_sprite(sprite.Sprite(self.DUDE_DEATHS[(self.outfit,self.colour)],
