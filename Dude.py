@@ -389,7 +389,7 @@ class Dude:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
 			for (door_path, door_location) in World.get_world().doors:
-				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039:
+				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039 and not World.get_world().buildings[i].destroyed:
 					# Player is at a door and may enter
 					DOOR_OPEN_SOUND.play()
 					self.is_in_building = True

@@ -459,6 +459,10 @@ class Building:
 	DEATH_SCREAM = resource.media('assets/Death Scream.wav', streaming=False)
 	CIV_SCREAM = resource.media('assets/Scream 1.wav', streaming=False)
 
+	RUBBLE = image.load('assets/Building_assets/rubble_fin.png')
+	RUBBLE.anchor_x = RUBBLE.width // 2
+	RUBBLE.anchor_y = RUBBLE.height // 2
+
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/clothes_icon.png')),
@@ -517,6 +521,11 @@ class Building:
 		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4) + 104/2
 		self.sprite.y = 1 + 28 + 202 * (id / 4) + 104/2
 
+		self.rubble = sprite.Sprite(self.RUBBLE, group=anim.ROOF, batch=World.batch)
+		self.rubble.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
+		self.rubble.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+		self.rubble.visible = False
+
 		self.light = sprite.Sprite(self.DOOR_LIGHT, group=anim.PATH,
 				batch=World.batch)
 		door_loc = self.BUILDING_TYPE[self.type][1]
@@ -544,6 +553,8 @@ class Building:
 
 		self.explosion_sprite = None
 		self.exploding = False
+
+		self.destroyed = None
 	
 	def draw(self, window):
 		#self.light.draw()
@@ -553,7 +564,13 @@ class Building:
 		pass
 
 	def update(self, time):
-		pass
+		if self.destroyed != None:
+			self.destroyed -= time
+			if self.destroyed < 0:
+				self.destroyed = None
+				self.sprite.visible = True
+				self.light.visible = True
+				self.rubble.visible = False
 
 	def screen_coords(self):
 		x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
@@ -579,6 +596,11 @@ class Building:
 			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY,
 					batch=World.batch)
 			self.explosion_sprite.x, self.explosion_sprite.y = self.screen_coords()
+
+			self.destroyed = 15
+			self.sprite.visible = False
+			self.light.visible = False
+			self.rubble.visible = True
 
 			for player in World.get_world().players:
 				if player == None:
