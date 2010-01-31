@@ -471,7 +471,7 @@ class Building:
 				image.load('assets/New Hud/Building_Stamps/parking_icon.png')),
 			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/factory_icon.png')),
-			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (UP, 0.5),
+			TYPE_OFFICE: (anim.load_anim('Building_assets/Office_anim', fps=1), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/office_icon.png')),
 			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/park_icon.png')),
