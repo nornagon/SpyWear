@@ -344,8 +344,6 @@ class Dude:
 				elif self.next_direction == LEFT and self.direction == UP:
 					m = self.turn_marker_flip
 					m.rotation = 0
-				else:
-#					print self.direction, self.next_direction
 
 				for b in [self.turn_marker, self.turn_marker_flip]:
 					if m is b:
@@ -444,7 +442,6 @@ class Dude:
 				clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
 		# no bomb
-		else:
 #			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
@@ -723,7 +720,7 @@ class Dude:
 		elif self.location > PATH_INTERSECTS[7]:
 			self.location = PATH_INTERSECTS[7]
 
-		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
+#		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
 #			print "Wargh direction set wrong"
 
 
