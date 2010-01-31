@@ -23,18 +23,14 @@ class Player(object):
 	MISSION_ICONS = {MISSION_BUILDING: image.load('assets/New Hud/Mission_Icons/miss_enter_bldg.png'),
 			}
 
-	HEAD_ICONS = {BLUE: (image.load('assets/Hud/head_blu_hat.png'),
-							image.load('assets/Hud/head_blu_nohat.png')),
-					YELLOW: (image.load('assets/Hud/head_yel_hat.png'),
-							image.load('assets/Hud/head_yel_nohat.png')),
-					GREEN: (image.load('assets/Hud/head_gre_hat.png'),
-							image.load('assets/Hud/head_gre_nohat.png')),
-					}
-
-	BODY_ICONS = {BLUE: image.load('assets/Hud/body_blu.png'),
-					YELLOW: image.load('assets/Hud/body_yel.png'),
-					GREEN: image.load('assets/Hud/body_gre.png'),
-					}
+	DUDE_OUTFITS = {
+		(HAT, BLUE):      image.load('assets/New Hud/Photos/blue_hat.png'),
+		(NO_HAT, BLUE):   image.load('assets/New Hud/Photos/blue_no_hat.png'),
+		(HAT, YELLOW):    image.load('assets/New Hud/Photos/yellow_hat.png'),
+		(NO_HAT, YELLOW): image.load('assets/New Hud/Photos/yellow_no_hat.png'),
+		(HAT, GREEN):     image.load('assets/New Hud/Photos/green_hat.png'),
+		(NO_HAT, GREEN):  image.load('assets/New Hud/Photos/green_no_hat.png'),
+	}
 
 	BOMB_ICONS = (image.load('assets/Lower Hud/bomb_icon_grey.png'),
 			image.load('assets/Lower Hud/bomb_icon_black.png'))
@@ -70,8 +66,7 @@ class Player(object):
 		self.death_count = 0
 		self.score = 0
 
-		self.head = None
-		self.body = None
+		self.appearance = None
 
 		self.mission_sprite = None
 		self.mission_target_sprite = None
@@ -109,26 +104,16 @@ class Player(object):
 			self.clear_mission_sprites()
 	
 	def update_dude_sprites(self):
-		if (self.head != None):
-			self.head.delete()
-			self.head = None
-
-		if (self.body != None):
-			self.body.delete()
-			self.body = None
+		if (self.appearance != None):
+			self.appearance.delete()
+			self.appearance = None
 
 		dude = self.get_dude()
-		if (dude.outfit == HAT):
-			head = 0
-		else:
-			head = 1
 
 		offset_y = self.get_offset_y()
 
-		self.head = sprite.Sprite(self.HEAD_ICONS[dude.colour][head], batch=self.batch,
-				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43)
-		self.body = sprite.Sprite(self.BODY_ICONS[dude.colour], batch = self.batch,
-				x = 94 + 60 + 7, y = offset_y + 180 - 3 - 43 - 84)
+		self.appearance = sprite.Sprite(self.DUDE_OUTFITS[(dude.outfit, dude.colour)], batch=self.batch,
+				x = 147, y = offset_y + 86)
 
 	def clear_mission_sprites(self):
 		if (self.mission_sprite != None):
@@ -174,7 +159,7 @@ class Player(object):
 	death_count = property(get_deaths, set_deaths)
 
 	def update(self, time):
-		if self.head == None:
+		if self.appearance == None:
 			self.update_dude_sprites()
 
 		if self.mission_sprite == None and self.mission != None:
@@ -208,17 +193,11 @@ class Player(object):
 				self.mission_sprite.visible = True
 				self.mission_target_sprite.visible = True
 		if not (self.reveal_appearance > 0 or self.id == World.my_player_id):
-			if self.head:
-#				pass
-				self.head.visible = False
-			if self.body:
-#				pass
-				self.body.visible = False
+			if self.appearance:
+				self.appearance.visible = False
 		else:
-			if self.head:
-				self.head.visible = True
-			if self.body:
-				self.body.visible = True
+			if self.appearance:
+				self.appearance.visible = True
 
 		self.reveal_mission -= time
 		self.reveal_appearance -= time
@@ -497,7 +476,7 @@ class Building:
 				image.load('assets/New Hud/Building_Stamps/parking_icon.png')),
 			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/factory_icon.png')),
-			TYPE_OFFICE: (image.load('assets/Building_assets/office_test.png'), (UP, 0.5),
+			TYPE_OFFICE: (anim.load_anim('Building_assets/Office_anim', fps=1), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/office_icon.png')),
 			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/park_icon.png')),

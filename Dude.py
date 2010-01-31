@@ -68,8 +68,8 @@ class Dude:
 	DUDE_OUTFITS = {
 		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat'),
 		(NO_HAT, BLUE): anim.load_anim('guy_walking_blue_noHat'),
-		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat'),
-		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat'),
+		(HAT, YELLOW): anim.load_anim('guy_walking_yellow_hat'),
+		(NO_HAT, YELLOW): anim.load_anim('guy_walking_yellow_noHat'),
 		(HAT, GREEN): anim.load_anim('guy_walking_green_hat'),
 		(NO_HAT, GREEN): anim.load_anim('guy_walking_green_noHat'),
 	}
