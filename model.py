@@ -244,6 +244,15 @@ class World:
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
 
+		self.win = sprite.Sprite(image.load('assets/compl.png'), batch=World.batch, group=anim.OVERLAY)
+		self.win.x = 256
+		self.win.y = 0
+		self.win.visible = False
+		self.lose = sprite.Sprite(image.load('assets/failed.png'), batch=World.batch, group=anim.OVERLAY)
+		self.lose.x = 256
+		self.lose.y = 0
+		self.lose.visible = False
+
 		crosshair = image.load('assets/crosshair_2.png')
 		crosshair.anchor_x = crosshair.width // 2
 		crosshair.anchor_y = crosshair.height // 2
@@ -361,12 +370,21 @@ class World:
 		self.players[player_id].score += increment
 		self.players[player_id].update_remote_state()
 
+	def is_over(self):
+		return any([p and p.score >= 10 for p in self.players])
+
 	def draw(self, window):
 		# background
 		self.background.blit(256,0)
 #		self.hud_mockup.blit(0,0)
 
 		self.draw_hud()
+
+		if self.is_over():
+			if self.players[World.my_player_id].score >= 10:
+				self.win.visible = True
+			else:
+				self.lose.visible = True
 
 		for d in self.dudes:
 			d.draw(window)
@@ -396,6 +414,8 @@ class World:
 				p.draw_hud()
 
 	def update(self, time):
+		if self.is_over(): return
+
 		for b in self.buildings:
 			b.update(time)
 

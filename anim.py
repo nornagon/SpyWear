@@ -1,6 +1,7 @@
 from pyglet import *
 import os, glob
 
+OVERLAY = graphics.OrderedGroup(15) # win,loss
 SKY = graphics.OrderedGroup(10) # explosions, crosshair
 ROOF = graphics.OrderedGroup(8) # building tops
 GROUND = graphics.OrderedGroup(6) # on the footpath
