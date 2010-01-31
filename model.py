@@ -371,7 +371,7 @@ class World:
 		self.players[player_id].update_remote_state()
 
 	def is_over(self):
-		return any([p and p.score >= 10 for p in self.players])
+		return any([p and p.score >= 3 for p in self.players])
 
 	def draw(self, window):
 		# background
@@ -381,7 +381,7 @@ class World:
 		self.draw_hud()
 
 		if self.is_over():
-			if self.players[World.my_player_id].score >= 10:
+			if self.players[World.my_player_id].score >= 3:
 				self.win.visible = True
 			else:
 				self.lose.visible = True
