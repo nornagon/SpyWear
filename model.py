@@ -35,6 +35,11 @@ class Player(object):
 	BOMB_ICONS = (image.load('assets/Lower Hud/bomb_icon_grey.png'),
 			image.load('assets/Lower Hud/bomb_icon_black.png'))
 
+	SHOT = image.load('assets/Lower Hud/gun_icon_black.png')
+	player_border = image.load('assets/New Hud/player_hud_border.png')
+
+	frame = image.load('assets/Lower Hud/lower_hud_frame.png')
+
 	background = image.load('assets/New Hud/hud_background.png')
 
 	skull = image.load('assets/new Hud/death_marker.png')
@@ -86,6 +91,12 @@ class Player(object):
 		self.reveal_appearance = 0
 		self.reveal_mission = 0
 		self.skull_sprite = None
+
+		if World.my_player_id == self.id:
+			self.player_border_sprite = sprite.Sprite(self.player_border, x = 0, y = self.get_offset_y())
+			self.bomb_sprite = sprite.Sprite(self.BOMB_ICONS[1], x=0, y=0)
+			self.shot_sprite = sprite.Sprite(self.SHOT, x=208, y=0)
+
 
 
 	def get_state(self):
@@ -227,7 +238,17 @@ class Player(object):
 		elif self.get_dude().alive and self.skull_sprite != None:
 			self.skull_sprite.delete()
 			self.skull_sprite = None
+
+		if World.my_player_id == self.id:
+			self.frame.blit(0, 0)
+
+			if self.get_dude().has_bomb:
+				self.bomb_sprite.draw()
+
+			if self.get_dude().shot_cooldown <= 0:
+				self.shot_sprite.draw()
 		
+			self.player_border_sprite.draw()
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
@@ -399,9 +420,9 @@ class World:
 		World.batch.draw()
 
 		# hud
-		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
-				font_size=24, x=0, y=7)
-		label.draw()
+#		label = text.Label("FPS: %d" % clock.get_fps(), font_name="Georgia",
+#				font_size=24, x=0, y=7)
+#		label.draw()
 
 	def draw_hud(self):
 		for p in self.players:
