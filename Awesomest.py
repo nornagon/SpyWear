@@ -86,6 +86,10 @@ def run((playerId, _world)):
 	player.eos_action = 'loop'
 	player.queue(AMBIENT_AUDIO)
 	player.play()
+	player2 = media.Player()
+	player2.eos_action = 'loop'
+	player2.queue(AMBIENT_MUSIC)
+	player2.play()
 
 world_deferred.addCallback(run)
 reactor.run()
