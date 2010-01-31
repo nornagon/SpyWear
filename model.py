@@ -443,12 +443,11 @@ class World:
 		terrorist_id, building_id = state
 		(x,y) = self.dudes[terrorist_id].xy()
 		(myx, myy) = self.dudes[self.my_player_id].xy()
-		d = math.sqrt((x-myx)^2 + (y-myy)^2)
+		d = math.sqrt((x-myx)*(x-myx) + (y-myy)*(y-myy))
 		if d < 100:
-			laugh = random.choose([LAUGH1_SOUND, LAUGH2_SOUND])
-			clock.schedule_once(explosion_animation, 1.0)
+			laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
 
-		self.buildings[building_id].explode(terrorist_id)
+		self.buildings[building_id].explode(terrorist_id, suppressBroadcast=True)
 
 class Building:
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
@@ -561,10 +560,19 @@ class Building:
 		y = 1 + 28 + 202 * (self.id / 4) + 104/2
 		return (x,y)
 
-	def explode(self, terrorist_id):
+	def explode(self, terrorist_id, suppressBroadcast=False):
 		if self.exploding: return
 		
-		broadcast_building_explosion((World.my_player_id, self.id))
+		print "exploding!"
+		
+		if not suppressBroadcast:
+			broadcast_building_explosion((World.my_player_id, self.id))
+		for p in World.get_world().players:
+			if p == None:
+				continue
+			if World.get_world().is_server and terrorist_id != p.id and p.get_dude().is_in_building and p.get_dude().building_id == self.id:
+				World.get_world().set_score(1)
+
 		self.BOMB_SOUND.play()
 		self.exploding = True
 		def explosion_animation(dt):
@@ -584,14 +592,21 @@ class Building:
 					if dude.is_in_building and dude.building_id == self.id:
 						# a player has been caught inside the bomb blast
 						dude.die()
+						killed_civ = False
+						killed_player = False
 						if dude.player_id == None:
-							# Killed a civilian
-							self.CIV_SCREAM.play() #TODO send out hint about detonator
+							killed_civ = True
+							self.CIV_SCREAM.play()
 						else:
 							# Killed a Player that is not you
-							if World.get_world().is_server and terrorist_id != dude.player_id:
-								World.get_world().set_score(terrorist_id)
+							killed_player = True
 							self.DEATH_SCREAM.play()
+						if killed_civ and not killed_player:
+							# Killed an innocent without a player . . . broadcast a hint about this player
+							if random.random() < 0.5:
+								broadcast_hint(self.id, 'appearance')
+							else:
+								broadcast_hint(self.id, 'mission')
 
 			@self.explosion_sprite.event
 			def on_animation_end():

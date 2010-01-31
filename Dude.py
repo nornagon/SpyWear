@@ -448,16 +448,18 @@ class Dude:
 			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
-		if self.shot_cooldown > 0: return
+		if self.shot_cooldown > 0 or not self.alive: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
 		broadcast_die(World.my_player_id, dead_guy.id)
 		dead_guy.die()
 		KILL_SOUND.play()
 		if dead_guy.player_id == None:
-			# Killed a Civilian
-			# TODO: Fire off a hint about self.player()
-			pass
+			# Killed a Civilian, send out hint about player
+			if random.random() < 0.5:
+				broadcast_hint(self.id, 'appearance')
+			else:
+				broadcast_hint(self.id, 'mission')
 		else:
 			# Killed a Player
 			World.get_world().set_score(self.id)
@@ -726,4 +728,5 @@ class Dude:
 
 
 from net import broadcast_dude_update, broadcast_die
+from net import broadcast_hint
 

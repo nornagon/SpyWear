@@ -14,6 +14,7 @@ WIDTH = 1024
 HEIGHT = 768
 
 AMBIENT_AUDIO = resource.media('assets/Ambient City.wav', streaming=True)
+AMBIENT_MUSIC = resource.media('assets/Theme.wav', streaming=True)
 
 World.my_player_id = 0
 
