@@ -455,9 +455,11 @@ class Dude:
 		dead_guy.die()
 		KILL_SOUND.play()
 		if dead_guy.player_id == None:
-			# Killed a Civilian
-			# TODO: Fire off a hint about self.player()
-			pass
+			# Killed a Civilian, send out hint about player
+			if random.random() < 0.5:
+				broadcast_hint(self.id, 'appearance')
+			else:
+				broadcast_hint(self.id, 'mission')
 		else:
 			# Killed a Player
 			World.get_world().set_score(self.id)
@@ -726,4 +728,5 @@ class Dude:
 
 
 from net import broadcast_dude_update, broadcast_die
+from net import broadcast_hint
 
