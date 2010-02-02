@@ -678,9 +678,9 @@ class Building:
 						if killed_civ and not killed_player:
 							# Killed an innocent without a player . . . broadcast a hint about this player
 							if random.random() < 0.5:
-								broadcast_hint(self.id, 'appearance')
+								broadcast_hint(player.id, 'appearance')
 							else:
-								broadcast_hint(self.id, 'mission')
+								broadcast_hint(player.id, 'mission')
 
 			@self.explosion_sprite.event
 			def on_animation_end():
