@@ -51,7 +51,7 @@ class Player(object):
 		self.mission_cooldown = 5.0
 		self.hint_cooldown = random.random()*10 + 5
 
-		self.name = "fdsa"
+		self.name = {0:"n1k1ta_k", 1:"JBJ_007", 2:"Felix_L", 3:"Stazi_M"}[id]
 
 		self.batch = graphics.Batch()
 
@@ -403,7 +403,7 @@ class World:
 		self.players[player_id].update_remote_state()
 
 	def is_over(self):
-		return any([p and p.score >= 3 for p in self.players])
+		return any([p and p.score >= 7 for p in self.players])
 
 	def draw(self, window):
 		# background
@@ -413,7 +413,7 @@ class World:
 		self.draw_hud()
 
 		if self.is_over():
-			if self.players[World.my_player_id].score >= 3:
+			if self.players[World.my_player_id].score >= 7:
 				self.win.visible = True
 			else:
 				self.lose.visible = True
