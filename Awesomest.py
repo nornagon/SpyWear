@@ -13,8 +13,8 @@ from twisted.internet.task import LoopingCall
 WIDTH = 1024
 HEIGHT = 768
 
-AMBIENT_AUDIO = resource.media('assets/Ambient City.wav', streaming=True)
-AMBIENT_MUSIC = resource.media('assets/Theme.wav', streaming=True)
+AMBIENT_AUDIO = resource.media('assets/Ambient City.mp3', streaming=True)
+AMBIENT_MUSIC = resource.media('assets/Theme.mp3', streaming=True)
 
 World.my_player_id = 0
 
