@@ -42,7 +42,7 @@ class Player(object):
 
 	background = image.load('assets/New Hud/hud_background.png')
 
-	skull = image.load('assets/new Hud/death_marker.png')
+	skull = image.load('assets/New Hud/death_marker.png')
 
 	def __init__(self, id, state = None):
 		self.id = id
