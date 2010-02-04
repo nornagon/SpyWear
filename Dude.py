@@ -135,7 +135,7 @@ class Dude:
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
 
-		self.workout_next_direction()
+		self.workout_next_direction(suppress_update=True)
 
 	def state(self):
 		return (self.id, self.path, self.location, self.direction,
@@ -185,8 +185,8 @@ class Dude:
 			self.direction = random.choice([LEFT,RIGHT])
 		self.next_direction = None
 
-		self.random_outfit(suppressUpdate = True)
-		self.enter(suppressUpdate = True)
+		self.random_outfit(suppress_update = True)
+		self.enter(suppress_update = True)
 		self.building_cooldown = 2.
 		self.update_remote_state()
 
@@ -205,17 +205,17 @@ class Dude:
 	def reset_idle_timer(self):
 		self.idle_time = 20.0
 	
-	def take_control_by(self, player_id, suppressUpdate=False):
+	def take_control_by(self, player_id, suppress_update=False):
 #		print "dude", self.id, "controlled by", player_id
 		self.player_id = player_id
 		self.next_direction = self.direction
 		self.idle_time = 0.0
 		self.stopped = False
-		if not suppressUpdate:
+		if not suppress_update:
 			self.update_remote_state()
 
 	def update_remote_state(self):
-		broadcast_dude_update(self.state())
+		net.my_peer.broadcast_dude_update(self.state())
 
 	def is_active_player(self):
 		return World.my_player_id == self.id
@@ -229,7 +229,7 @@ class Dude:
 		self.sprite = spr
 		self.sprite.visible = True
 
-	def randomise(self):
+	def randomise(self, suppress_update=False):
 		self.location = random.random()
 		self.path = random.randint(0, PATHS - 1)
 		if left_right_path(self.path):
@@ -244,9 +244,10 @@ class Dude:
 		self.set_sprite(sprite.Sprite(self.DUDE_OUTFITS[(self.outfit,self.colour)],
 				batch=World.batch, group=anim.GROUND))
 
-		self.workout_next_direction()
+		self.workout_next_direction(suppress_update=True)
 
-		self.update_remote_state()
+		if not suppress_update:
+			self.update_remote_state()
 
 	def draw(self, window):
 		if not self.marker and self.is_active_player():
@@ -382,7 +383,7 @@ class Dude:
 			self.stopped = not self.stopped
 			self.update_remote_state()
 
-	def enter(self, suppressUpdate = False):
+	def enter(self, suppress_update = False):
 		if not self.is_in_building:
 			# Use self.path and self.location to see if we're near a door
 			i = 0
@@ -407,7 +408,7 @@ class Dude:
 						# Go left
 						self.building_direction = LEFT
 #					print "Player has entered building ", i, " going ", self.building_direction
-					if not suppressUpdate:
+					if not suppress_update:
 						self.update_remote_state()
 				i += 1
 		
@@ -448,15 +449,15 @@ class Dude:
 		if self.shot_cooldown > 0 or not self.alive: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
-		broadcast_die(World.my_player_id, dead_guy.id)
+		net.my_peer.broadcast_die(World.my_player_id, dead_guy.id)
 		dead_guy.die()
 		KILL_SOUND.play()
 		if dead_guy.player_id == None:
 			# Killed a Civilian, send out hint about player
 			if random.random() < 0.5:
-				broadcast_hint(self.id, 'appearance')
+				net.my_peer.broadcast_hint(self.id, 'appearance')
 			else:
-				broadcast_hint(self.id, 'mission')
+				net.my_peer.broadcast_hint(self.id, 'mission')
 		else:
 			# Killed a Player
 			World.get_world().set_score(self.id)
@@ -530,13 +531,14 @@ class Dude:
 
 		return valid_directions
 
-	def workout_next_direction(self):
+	def workout_next_direction(self, suppress_update=False):
 #		print "workout next direction. Old direction:", self.direction
 		directions = self.valid_next_directions()
 #		print "valid directions:", directions
 #		self.next_direction = directions[0]
 		self.next_direction = random.choice(directions)
-		self.update_remote_state()
+		if not suppress_update:
+			self.update_remote_state()
 
 	# do movement update.
 	def movement_update_helper(self, time):
@@ -633,7 +635,7 @@ class Dude:
 		self.fading = False
 		self.sprite.opacity = 255
 
-	def random_outfit(self, suppressUpdate = False):
+	def random_outfit(self, suppress_update = False):
 		self.outfit = random.choice([HAT, NO_HAT])
 
 		colours = [BLUE, YELLOW, GREEN]
@@ -645,7 +647,7 @@ class Dude:
 		if (self.player_id != None):
 			self.get_player().update_dude_sprites()
 
-		if not suppressUpdate:
+		if not suppress_update:
 			self.update_remote_state()
 
 
@@ -724,6 +726,4 @@ class Dude:
 #			print "Wargh direction set wrong"
 
 
-from net import broadcast_dude_update, broadcast_die
-from net import broadcast_hint
-
+import net

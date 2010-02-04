@@ -191,9 +191,9 @@ class Player(object):
 			self.hint_cooldown -= time
 			if self.hint_cooldown <= 0.0:
 				if random.random() < 0.5:
-					broadcast_hint(self.id, 'appearance')
+					net.my_peer.broadcast_hint(self.id, 'appearance')
 				else:
-					broadcast_hint(self.id, 'mission')
+					net.my_peer.broadcast_hint(self.id, 'mission')
 
 				self.hint_cooldown = random.random() * 10 + 7
 
@@ -215,7 +215,7 @@ class Player(object):
 		self.reveal_appearance -= time
 
 	def update_remote_state(self):
-		broadcast_player_update(self.get_state())
+		net.my_peer.broadcast_player_update(self.get_state())
 
 	def get_dude(self):
 		return World.get_world().dudes[self.id]
@@ -306,7 +306,7 @@ class World:
 			for i in xrange(20):
 				self.add_dude()
 
-			World.my_player_id = self.allocate_new_playerid()
+			World.my_player_id = self.allocate_new_playerid(suppress_update=True)
 		else:
 			# construct from given state
 			(building_state, dude_state, player_state) = state
@@ -329,7 +329,7 @@ class World:
 	def set_world(cls, world):
 		cls.__instance = world
 
-	def allocate_new_playerid(self, suppressUpdate=False):
+	def allocate_new_playerid(self, suppress_update=False):
 		if not None in self.players:
 			return None
 
@@ -340,27 +340,28 @@ class World:
 			return None
 
 		self.players[player_id] = Player(player_id)
-		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
+		self.dudes[player_id].take_control_by(player_id, suppress_update)
 
-		self.broadcast_all_player_state()
+		if not suppress_update:
+			self.broadcast_all_player_state()
 
 		return player_id
 
 	def drop_player(self, player_id):
 		self.players[player_id] = None
-		self.dudes[player_id].take_control_by(None, suppressUpdate=True)
+		self.dudes[player_id].take_control_by(None, suppress_update=True)
 		if World.is_server:
-			broadcast_player_dropped(player_id)
+			net.my_peer.broadcast_player_dropped(player_id)
 
 	def broadcast_all_player_state(self):
 		for player_state in self.get_player_state():
 			if player_state is None: continue
-			broadcast_player_update(player_state)
+			net.my_peer.broadcast_player_update(player_state)
 
 
 	def add_dude(self):
 		d = Dude(id = len(self.dudes))
-		d.randomise()
+		d.randomise(suppress_update=True)
 		self.dudes.append(d)
 
 	def nearest_dude_to(self, dude):
@@ -648,7 +649,7 @@ class Building:
 		print "exploding!"
 		
 		if not suppressBroadcast:
-			broadcast_building_explosion((World.my_player_id, self.id))
+			net.my_peer.broadcast_building_explosion((World.my_player_id, self.id))
 		for p in World.get_world().players:
 			if p == None:
 				continue
@@ -691,9 +692,9 @@ class Building:
 						if killed_civ and not killed_player:
 							# Killed an innocent without a player . . . broadcast a hint about this player
 							if random.random() < 0.5:
-								broadcast_hint(player.id, 'appearance')
+								net.my_peer.broadcast_hint(player.id, 'appearance')
 							else:
-								broadcast_hint(player.id, 'mission')
+								net.my_peer.broadcast_hint(player.id, 'mission')
 
 			@self.explosion_sprite.event
 			def on_animation_end():
@@ -707,5 +708,4 @@ class Building:
 		return (self.type, self.has_bomb, self.blownup_cooldown)
 
 from Dude import *
-from net import broadcast_building_explosion, broadcast_player_update, broadcast_hint
-from net import broadcast_player_dropped
+import net
