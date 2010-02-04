@@ -27,6 +27,10 @@ def broadcast_player_update(state):
 	id = state[0]
 	broadcast_state(state, 'player_state')#, suppressId = id)
 
+# only ever called from the server
+def broadcast_player_dropped(player_dropped_id):
+	broadcast_state(player_dropped_id, 'player_dropped')
+
 def broadcast_hint(playerID, attr):
 	for peer in peers:
 		peer.callRemote('hint', playerID, attr)
@@ -48,7 +52,6 @@ class GGJPeer(pb.Root):
 			factory = pb.PBClientFactory()
 			reactor.connectTCP(host, PORT, factory)
 			d = factory.getRootObject().addCallbacks(self.connected, self.failure)
-			d.addCallbacks(self.got_world_state, self.failure)
 			self.deferred = d
 			World.is_server = False
 		else:
@@ -85,12 +88,16 @@ class GGJPeer(pb.Root):
 		if World.is_server:
 			broadcast_player_update(state)
 
+	def remote_player_dropped(self, player_dropped_id):
+		self.world.drop_player(player_dropped_id)
+
 # Server function. Client calls this when it connects
 	def remote_login(self, name, peer):
 		print "New client connected with name", name
 
 		peer.dude_id = self.world.allocate_new_playerid(suppressUpdate = True)
 		peers.append(peer)
+		peer.notifyOnDisconnect(self.onDisconnect)
 		print "new peer id allocated:", peer.dude_id
 		print [p.dude_id for p in peers]
 
@@ -100,7 +107,8 @@ class GGJPeer(pb.Root):
 	def connected(self, perspective):
 		print "Connected! Wahoo!"
 		peers.append(perspective)
-		return perspective.callRemote('login', "winnerer", self)
+		return perspective.callRemote('login', "winnerer",
+				self).addCallbacks(self.got_world_state, self.failure)
 
 	def got_world_state(self, result):
 		print "got world state"
@@ -110,6 +118,13 @@ class GGJPeer(pb.Root):
 	
 	def failure(self, failure):
 		print "Boo failure connecting to server!"
+		reactor.stop()
+		return failure
+
+	def onDisconnect(self, peer):
+		print "something disconnected", peer
+		peers.remove(peer)
+		World.get_world().drop_player(World.get_world().dudes[peer.dude_id].player_id)
 
 def server_world():
 	"""This runs the protocol on port 4444"""

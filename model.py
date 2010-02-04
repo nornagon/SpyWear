@@ -340,9 +340,20 @@ class World:
 		self.players[player_id] = Player(player_id)
 		self.dudes[player_id].take_control_by(player_id, suppressUpdate)
 
-		broadcast_player_update(self.get_player_state())
+		self.broadcast_all_player_state()
 
 		return player_id
+
+	def drop_player(self, player_id):
+		self.players[player_id] = None
+		self.dudes[player_id].take_control_by(None, suppressUpdate=True)
+		if World.is_server:
+			broadcast_player_dropped(player_id)
+
+	def broadcast_all_player_state(self):
+		for player_state in self.get_player_state():
+			if player_state is None: continue
+			broadcast_player_update(player_state)
 
 
 	def add_dude(self):
@@ -466,7 +477,7 @@ class World:
 			self.set_player_state(s)
 	
 	def set_player_state(self, player_state):
-#		print "set_player_state", player_state
+		print "set_player_state", player_state
 
 		if player_state == None:
 			return
@@ -694,6 +705,5 @@ class Building:
 		return (self.type, self.has_bomb, self.blownup_cooldown)
 
 from Dude import *
-from net import broadcast_building_explosion
-from net import broadcast_player_update
-from net import broadcast_hint
+from net import broadcast_building_explosion, broadcast_player_update, broadcast_hint
+from net import broadcast_player_dropped
