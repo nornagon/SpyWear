@@ -96,6 +96,8 @@ class GGJPeer(pb.Root):
 		print "New client connected with name", name
 
 		peer.dude_id = self.world.allocate_new_playerid(suppressUpdate = True)
+		if peer.dude_id is None:
+			raise "Too many players!"
 		peers.append(peer)
 		peer.notifyOnDisconnect(self.onClientDropped)
 		print "new peer id allocated:", peer.dude_id
@@ -128,7 +130,8 @@ class GGJPeer(pb.Root):
 		World.get_world().drop_player(World.get_world().dudes[peer.dude_id].player_id)
 
 	def onServerDropped(self, peer):
-		World.get_world().connected = False
+		if World.get_world():
+			World.get_world().connected = False
 
 def server_world():
 	"""This runs the protocol on port 4444"""
