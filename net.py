@@ -97,7 +97,7 @@ class GGJPeer(pb.Root):
 
 		peer.dude_id = self.world.allocate_new_playerid(suppressUpdate = True)
 		peers.append(peer)
-		peer.notifyOnDisconnect(self.onDisconnect)
+		peer.notifyOnDisconnect(self.onClientDropped)
 		print "new peer id allocated:", peer.dude_id
 		print [p.dude_id for p in peers]
 
@@ -107,6 +107,7 @@ class GGJPeer(pb.Root):
 	def connected(self, perspective):
 		print "Connected! Wahoo!"
 		peers.append(perspective)
+		perspective.notifyOnDisconnect(self.onServerDropped)
 		return perspective.callRemote('login', "winnerer",
 				self).addCallbacks(self.got_world_state, self.failure)
 
@@ -121,10 +122,13 @@ class GGJPeer(pb.Root):
 		reactor.stop()
 		return failure
 
-	def onDisconnect(self, peer):
+	def onClientDropped(self, peer):
 		print "something disconnected", peer
 		peers.remove(peer)
 		World.get_world().drop_player(World.get_world().dudes[peer.dude_id].player_id)
+
+	def onServerDropped(self, peer):
+		World.get_world().connected = False
 
 def server_world():
 	"""This runs the protocol on port 4444"""

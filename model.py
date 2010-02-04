@@ -285,6 +285,8 @@ class World:
 		self.lose.y = 0
 		self.lose.visible = False
 
+		self.connected = True
+
 		crosshair = image.load('assets/crosshair_2.png')
 		crosshair.anchor_x = crosshair.width // 2
 		crosshair.anchor_y = crosshair.height // 2
@@ -414,7 +416,7 @@ class World:
 		self.players[player_id].update_remote_state()
 
 	def is_over(self):
-		return any([p and p.score >= 7 for p in self.players])
+		return any([p and p.score >= 7 for p in self.players]) or not self.connected
 
 	def draw(self, window):
 		# background
@@ -424,10 +426,13 @@ class World:
 		self.draw_hud()
 
 		if self.is_over():
-			if self.players[World.my_player_id].score >= 7:
-				self.win.visible = True
-			else:
+			if not self.connected:
 				self.lose.visible = True
+			else:
+				if self.players[World.my_player_id].score >= 7:
+					self.win.visible = True
+				else:
+					self.lose.visible = True
 
 		for d in self.dudes:
 			d.draw(window)
