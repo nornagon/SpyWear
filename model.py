@@ -426,13 +426,10 @@ class World:
 		self.draw_hud()
 
 		if self.is_over():
-			if not self.connected:
-				self.lose.visible = True
+			if self.players[World.my_player_id].score >= 7:
+				self.win.visible = True
 			else:
-				if self.players[World.my_player_id].score >= 7:
-					self.win.visible = True
-				else:
-					self.lose.visible = True
+				self.lose.visible = True
 
 		for d in self.dudes:
 			d.draw(window)
