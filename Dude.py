@@ -154,6 +154,7 @@ class Dude:
 		building_id = random.randint(0,15)
 		self.node = self.world.buildings[building_id]
 		self.direction = self.node.edges.keys()[0]
+		self.distance = 0.0
 		self.next_direction = self.next_node().edges.keys()[0] # TODO: random
 
 		self.random_outfit(suppress_update = True)
@@ -352,7 +353,7 @@ class Dude:
 				net.my_peer.broadcast_hint(self.id, 'mission')
 		else:
 			# Killed a Player
-			World.get_world().set_score(self.id)
+			self.get_player().increment_score(1)
 		self.shot_cooldown = 5.
 
 	def die(self):
@@ -440,7 +441,7 @@ class Dude:
 				if not World.mute: DOOR_CLOSE_SOUND.play()
 				player = self.get_player()
 				if player != None and player.mission == Player.MISSION_BUILDING \
-						and player.mission_target == self.building_id:
+						and player.mission_target == self.node.id:
 					# player has completed a mission in a building
 					player.complete_mission()
 
@@ -455,8 +456,13 @@ class Dude:
 		distance_to_next_node = self.node.distanceTo(self.direction)
 		if self.distance >= distance_to_next_node:
 			self.entering_node(self.next_node())
+
+			if not self.next_direction in self.valid_next_directions():
+				self.workout_next_direction() # uhhhh... someone lagged out :/
+
 			self.node = self.next_node()
 			self.direction = self.next_direction
+			self.next_direction = None
 			self.distance -= distance_to_next_node
 			if (self.player_id is None and World.is_server) or \
 					(self.is_active_player() and (self.idle_time <= 0 or \

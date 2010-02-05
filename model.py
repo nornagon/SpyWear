@@ -72,7 +72,7 @@ class Player(object):
 				x = 24, y = self.get_offset_y() + 76, width = 84, height = 26)
 
 		self.death_count = 0
-		self.score = 0
+		self._score = 0
 
 		self.appearance = None
 
@@ -159,6 +159,10 @@ class Player(object):
 	def setscore(self, value):
 		self._score = value
 		self.score_label.text = str(value * 1000)
+
+	def increment_score(self, inc=1):
+		self.score += 1
+		self.update_remote_state()
 
 	score = property(getscore, setscore)
 
@@ -498,10 +502,6 @@ class World:
 	def get_player_dude(self, player_id):
 		return self.dudes[player_id]
 		
-	def set_score(self, player_id, increment = 1):
-		self.players[player_id].score += increment
-		self.players[player_id].update_remote_state()
-
 	def is_over(self):
 		return any([p and p.score >= 7 for p in self.players]) or not self.connected
 
@@ -735,12 +735,6 @@ class Building(Node):
 		
 		if not suppressBroadcast:
 			net.my_peer.broadcast_building_explosion((World.my_player_id, self.id))
-		for p in World.get_world().players:
-			if p == None:
-				continue
-			if World.get_world().is_server and terrorist_id != p.id and \
-				p.get_dude().is_in_building() and p.get_dude().building_id == self.id:
-				World.get_world().set_score(1)
 
 		if not World.mute: self.BOMB_SOUND.play()
 		self.exploding = True
@@ -753,6 +747,16 @@ class Building(Node):
 			self.sprite.visible = False
 			self.light.visible = False
 			self.rubble.visible = True
+
+			if World.get_world().is_server:
+				score_diff = 0
+				for p in World.get_world().players:
+					if p == None:
+						continue
+					if terrorist_id != p.id and p.get_dude().node is self:
+						score_diff += 1
+				if score_diff != 0:
+					World.get_world().players[terrorist_id].increment_score(score_diff)
 
 			for player in World.get_world().players:
 				if player == None:
