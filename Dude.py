@@ -410,6 +410,10 @@ class Dude:
 		dirs = self.next_node().edges.keys()
 		if isinstance(self.node, Building):
 			dirs.remove(self.opposite(self.direction))
+		for d in dirs:
+			e = self.next_node().edges[d]
+			if isinstance(e, Building) and e.destroyed:
+				dirs.remove(d)
 		return dirs
 
 	def workout_next_direction(self, suppress_update=False):
