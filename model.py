@@ -683,23 +683,26 @@ class Building(Node):
 				batch=World.batch)
 		door_loc = self.BUILDING_TYPE[self.type][1]
 
+		bx = 256 + 1 + 28 + 202 * (id % 4)
+		by = 1 + 28 + 202 * (id / 4)
+
 		# now we set location on the side
 		if door_loc[0] == LEFT:
 			self.light.rotation = -90
-			self.light.x = x + 256
-			self.light.y = y + door_loc[1] * 104 + self.light.image.width // 2
+			self.light.x = bx
+			self.light.y = by + door_loc[1] * 104 + self.light.image.width // 2
 		elif door_loc[0] == RIGHT:
 			self.light.rotation = 90
-			self.light.x = x + 104 + 256
-			self.light.y = y + door_loc[1] * 104 - self.light.image.width // 2
+			self.light.x = bx + 104
+			self.light.y = by + door_loc[1] * 104 - self.light.image.width // 2
 		elif door_loc[0] == DOWN:
 			self.light.rotation = 180
-			self.light.x = x + door_loc[1] * 104 + self.light.image.width // 2 + 256
-			self.light.y = y
+			self.light.x = bx + door_loc[1] * 104 + self.light.image.width // 2
+			self.light.y = by
 		elif door_loc[0] == UP:
 			self.light.rotation = 0
-			self.light.x = x + door_loc[1] * 104 - self.light.image.width // 2 + 256
-			self.light.y = y + 104
+			self.light.x = bx + door_loc[1] * 104 - self.light.image.width // 2
+			self.light.y = by + 104
 
 		self.explosion_sprite = None
 		self.exploding = False
