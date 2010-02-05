@@ -462,7 +462,6 @@ class Dude:
 
 			self.node = self.next_node()
 			self.direction = self.next_direction
-			self.next_direction = None
 			self.distance -= distance_to_next_node
 			if (self.player_id is None and World.is_server) or \
 					(self.is_active_player() and (self.idle_time <= 0 or \
