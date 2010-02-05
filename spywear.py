@@ -34,12 +34,19 @@ class GameState:
 		dispatcher.push_handlers(**handler_dict)
 		self.scheduled = lambda dt: self.update(dt)
 		clock.schedule(self.scheduled)
+		self.enter_state()
 
 	def deactivate(self, dispatcher):
+		self.exit_state()
 		dispatcher.pop_handlers()
 		clock.unschedule(self.scheduled)
 
 	def update(self, dt):
+		pass
+
+	def exit_state(self):
+		pass
+	def enter_state(self):
 		pass
 
 WIDTH = 1024
@@ -65,8 +72,25 @@ keybindings = {key.W : UP, key.UP : UP, key.A : LEFT, key.LEFT : LEFT,
 	       key.S : DOWN, key.DOWN : DOWN, key.D : RIGHT, key.RIGHT : RIGHT}
 
 class MainState(GameState):
+	player = media.Player()
+	player.eos_action = 'loop'
+	player.queue(AMBIENT_AUDIO)
+
 	def __init__(self, world):
 		self.world = world
+
+	def enter_state(self):
+		self.player.seek(0)
+		self.player.play()
+
+	def exit_state(self):
+		if World.is_server:
+			net.my_peer.drop()
+		else:
+			net.my_peer.peers[0].broker.transport.loseConnection()
+		del net.my_peer
+		net.my_peer = None
+		self.player.pause()
 
 	def on_draw(self):
 		window.clear()
@@ -85,6 +109,9 @@ class MainState(GameState):
 			dude.bomb()
 		elif symbol == key.V:
 			dude.shoot()
+		elif symbol == key.ESCAPE:
+			state_controller.switch(MenuState)
+			return True
 
 		dude.reset_idle_timer()
 
@@ -181,21 +208,15 @@ Press {bold True}H{bold False} to host a game
 		world_deferred = defer.maybeDeferred(client_world, host)
 		world_deferred.addCallback(run)
 
+	def __call__(self):
+		return self
+MenuState = MenuState()
+
 def run((playerId, _world)):
 	World.my_player_id = playerId
 	World.set_world(_world)
 
 	state_controller.switch(MainState(_world))
-
-	player = media.Player()
-	player.eos_action = 'loop'
-	player.queue(AMBIENT_AUDIO)
-	player.play()
-	player2 = media.Player()
-	player2.eos_action = 'loop'
-	player2.queue(AMBIENT_MUSIC)
-	player2.play()
-
 
 def pygletPump():
 	clock.tick(poll=True)
@@ -208,6 +229,11 @@ def pygletPump():
 
 state_controller = StateController(window)
 state_controller.switch(MenuState())
+
+player2 = media.Player()
+player2.eos_action = 'loop'
+player2.queue(AMBIENT_MUSIC)
+player2.play()
 
 LoopingCall(pygletPump).start(1/60.0)
 

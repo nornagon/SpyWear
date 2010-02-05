@@ -267,9 +267,10 @@ LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 
 class World:
 	is_server = True
-	batch = graphics.Batch()
+	batch = None
 
 	def __init__(self, state = None):
+		World.batch = graphics.Batch()
 		self.buildings = []
 		self.dudes = []
 		self.background = image.load('assets/city_all.png')

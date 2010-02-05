@@ -136,6 +136,9 @@ class GGJPeer(pb.Root):
 			print 'got mission hint for',playerID
 			World.get_world().players[playerID].reveal_mission = 5
 
+	def drop(self):
+		self.listener.stopListening()
+
 
 def server_world():
 	"""This runs the protocol on port 4444"""
@@ -144,7 +147,7 @@ def server_world():
 	global my_peer
 	my_peer = GGJPeer(world=world)
 	factory = pb.PBServerFactory(my_peer)
-	reactor.listenTCP(PORT, factory)
+	my_peer.listener = reactor.listenTCP(PORT, factory)
 
 	return (0, world)
 
