@@ -40,30 +40,6 @@ ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
 CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
 KILL_SOUND = resource.media('assets/Pistol Kill.wav', streaming=False)
 
-def left_right_path(path):
-	return path < (BUILDINGS_X * 2)
-
-def up_down_path(path):
-	return not left_right_path(path)
-
-def path_intersect(path):
-	path %= BUILDINGS_X * 2
-	path_inc = path / 2
-	if path % 2 == 0:
-		# south side of a building
-		y = 14 + 202 * path_inc
-	else:
-		# north side of a building
-		y = 28 + 104 + 14 + 202 * path_inc
-
-	return y / 768.0
-
-PATH_INTERSECTS = [path_intersect(x) for x in range(PATHS)]
-
-ROT_UP, ROT_RIGHT, ROT_DOWN, ROT_LEFT = range(4)
-TRANS = {LEFT: ROT_LEFT, RIGHT: ROT_RIGHT, UP: ROT_UP, DOWN: ROT_DOWN}
-INV_TRANS = dict (zip(TRANS.values(),TRANS.keys()))
-
 class Dude:
 	DUDE_OUTFITS = {
 		(HAT, BLUE): anim.load_anim('guy_walking_blue_hat'),
@@ -89,21 +65,17 @@ class Dude:
 	TURN_MARKER.anchor_y = TURN_MARKER.height // 2
 	TURN_MARKER_FLIP = TURN_MARKER.texture.get_transform(flip_x = True)
 
-	# 1/sec where sec = time to walk from one side of the map to the other
-	SPEED = 1/15.
+	# dude speed in pixels/sec
+	SPEED = 50.0
 
 	def reset(self):
-		self.path = 0
-		self.location = 0.0
-		self.direction = RIGHT
-		self.next_direction = self.direction
+		self.node = self.world.map.nodes[0]
+		self.direction = self.node.edges.keys()[0]
+		self.distance = 0.0
+		self.workout_next_direction(suppress_update=True)
 		self.stopped = False
 		self.outfit = HAT
 		self.colour = BLUE
-		self.is_in_building = False
-		self.building_id = None
-		self.building_direction = UP
-		self.building_cooldown = 0.0
 
 		self.shot_cooldown = 0.0
 		
@@ -118,7 +90,8 @@ class Dude:
 
 		self.time_to_enter = random.random() * 20 + 3
 
-	def __init__(self, id=None, state=None):
+	def __init__(self, world, id=None, state=None):
+		self.world = world
 		self.id = id
 		self.player_id = None
 
@@ -135,25 +108,23 @@ class Dude:
 		if self.id == None:
 			raise Exception("Dude does not have an ID!")
 
-		self.workout_next_direction(suppress_update=True)
-
 	def state(self):
-		return (self.id, self.path, self.location, self.direction,
+		return (self.id, self.node.id, self.distance, self.direction,
 				self.next_direction, self.stopped, self.outfit, self.colour,
 				self.has_bomb, self.bomb_location, self.player_id,
-				self.alive, self.building_id, self.building_direction, self.building_cooldown,
-				self.is_in_building)
+				self.alive)
 
 	def update_local_state(self, remotestate):
 		old_alive = self.alive
 		old_outfit = self.outfit
 		old_colour = self.colour
 
-		(id, self.path, self.location, self.direction,
+		(id, node_id, self.distance, self.direction,
 				self.next_direction, self.stopped, self.outfit, self.colour,
 				self.has_bomb, self.bomb_location, self.player_id,
-				self.alive, self.building_id, self.building_direction, self.building_cooldown,
-				self.is_in_building) = remotestate
+				self.alive) = remotestate
+
+		self.node = self.world.map.nodes[node_id]
 
 		if self.alive and (old_alive != self.alive or old_outfit != self.outfit or old_colour != self.colour):
 			self.update_sprite()
@@ -178,12 +149,9 @@ class Dude:
 
 		# pick a door to come out of
 		building_id = random.randint(0,15)
-		self.path, self.location = World.get_world().doors[building_id]
-		if self.path >= 8:
-			self.direction = random.choice([UP,DOWN])
-		else:
-			self.direction = random.choice([LEFT,RIGHT])
-		self.next_direction = None
+		self.node = self.world.buildings[building_id]
+		self.direction = self.node.edges.keys()[0]
+		self.next_direction = self.next_node().edges.keys()[0] # TODO: random
 
 		self.random_outfit(suppress_update = True)
 		self.enter(suppress_update = True)
@@ -191,24 +159,13 @@ class Dude:
 		self.update_remote_state()
 
 	def xy(self):
-		if left_right_path(self.path):
-			# on a horizontal path
-			y = PATH_INTERSECTS[self.path] * 768
-			x = 768 * self.location
-		else:
-			# on a vertical path
-			x = PATH_INTERSECTS[self.path] * 768
-			y = 768 * self.location
-
-		return (x,y)
+		return self.node.pointAt(self.direction, self.distance)
 
 	def reset_idle_timer(self):
 		self.idle_time = 20.0
 	
 	def take_control_by(self, player_id, suppress_update=False):
-#		print "dude", self.id, "controlled by", player_id
 		self.player_id = player_id
-		self.next_direction = self.direction
 		self.idle_time = 0.0
 		self.stopped = False
 		if not suppress_update:
@@ -230,14 +187,9 @@ class Dude:
 		self.sprite.visible = True
 
 	def randomise(self, suppress_update=False):
-		self.location = random.random()
-		self.path = random.randint(0, PATHS - 1)
-		if left_right_path(self.path):
-			self.direction = random.randint(LEFT, RIGHT)
-			self.next_direction = self.direction
-		else:
-			self.direction = random.randint(UP, DOWN)
-			self.next_direction = self.direction
+		self.node = random.choice(self.world.map.nodes)
+		self.direction = random.choice(self.node.edges.keys())
+		self.distance = random.random() * self.node.distanceTo(self.direction)
 		self.outfit = random.choice([HAT, NO_HAT])
 		self.colour = random.choice([BLUE, YELLOW, GREEN])
 
@@ -259,57 +211,18 @@ class Dude:
 			self.turn_marker_flip.visible = False
 
 
-		effective_direction = self.direction
-		if self.is_in_building:
-			effective_direction = self.building_direction
-
-		if effective_direction == LEFT:
+		if self.direction == LEFT:
 			self.sprite.rotation = -90
-		elif effective_direction == RIGHT:
+		elif self.direction == RIGHT:
 			self.sprite.rotation = 90
-		elif effective_direction == UP:
+		elif self.direction == UP:
 			self.sprite.rotation = 0
-		elif effective_direction == DOWN:
+		elif self.direction == DOWN:
 			self.sprite.rotation = 180
 
-		if self.is_in_building:
-			if self.building_cooldown > 2.:
-				# go in
-				offset = ((4. - self.building_cooldown)/2.) * 66
-				entering = True
-			else:
-				# go out
-				offset = self.building_cooldown/2. * 66
-				entering = False
-
-			if self.building_direction == UP:
-				# on a horizontal path
-				y = PATH_INTERSECTS[self.path] * 768.0
-				self.sprite.x = 256 + 1 + 766 * self.location
-				self.sprite.y = 1 + y + offset
-
-			elif self.building_direction == DOWN:
-				y = PATH_INTERSECTS[self.path] * 768.0
-				self.sprite.x = 256 + 1 + 766 * self.location
-				self.sprite.y = 1 + y - offset
-
-			# TODO
-			if self.building_direction == LEFT:
-				pass
-			if self.building_direction == RIGHT:
-				pass
-				
-		else:
-			if left_right_path(self.path):
-				# on a horizontal path
-				y = PATH_INTERSECTS[self.path] * 768.0
-				self.sprite.y = 1 + y
-				self.sprite.x = 256 + 1 + 768 * self.location
-			else:
-				# on a vertical path
-				x = PATH_INTERSECTS[self.path] * 768.0
-				self.sprite.x = 256 + 1 + x
-				self.sprite.y = 1 + 768 * self.location
+		xy = self.xy()
+		self.sprite.x = 256 + xy[0]
+		self.sprite.y = xy[1]
 
 		if self.marker:
 			self.marker.rotation = self.sprite.rotation
@@ -317,10 +230,8 @@ class Dude:
 			self.marker.y = self.sprite.y
 
 			if self.next_direction != None and self.next_direction != self.direction and \
-					self.next_direction != self.opposite(self.direction) and not self.is_in_building:
-				xrow, yrow = self.destination_row_coordinates()
-				x = PATH_INTERSECTS[xrow] * 768 + 256
-				y = PATH_INTERSECTS[yrow] * 768
+					self.next_direction != self.opposite(self.direction) and \
+					not isinstance(self.next_node(), Building):
 				if self.next_direction == LEFT and self.direction == DOWN:
 					m = self.turn_marker
 					m.rotation = 180
@@ -351,71 +262,44 @@ class Dude:
 						b.visible = True
 					else:
 						b.visible = False
-				m.x = x
-				m.y = y
+
+				n = self.next_node()
+				m.x = 256 + n.x
+				m.y = n.y
 			else:
 				self.turn_marker.visible = False
 				self.turn_marker_flip.visible = False
 
-
-	def forward(self):
-		if self.direction == UP or self.direction == RIGHT:
-			# going 'forwards'
-			return True
-		else:
-			# ... or backwards...
-			return False
+	def next_node(self):
+		return self.node.edges[self.direction]
 
 	def turn(self, new_direction):
-		if not self.is_in_building:
-			if new_direction == self.opposite(self.direction):
-				self.direction = new_direction
+		if not isinstance(self.next_node(), Building):
+			if new_direction in self.valid_next_directions():
 				self.next_direction = new_direction
-			else:
-				self.next_direction = new_direction
-
-			self.stopped = False
-
-			self.update_remote_state()
+				self.stopped = False
+				self.update_remote_state()
  
 	def stopstart(self):
-		if not self.is_in_building:
+		if not self.is_in_building():
 			self.stopped = not self.stopped
 			self.update_remote_state()
 
-	def enter(self, suppress_update = False):
-		if not self.is_in_building:
-			# Use self.path and self.location to see if we're near a door
-			i = 0
-			for (door_path, door_location) in World.get_world().doors:
-				if door_path == self.path and door_location - 0.039 < self.location < door_location + 0.039 and not World.get_world().buildings[i].destroyed:
-					# Player is at a door and may enter
-					DOOR_OPEN_SOUND.play()
-					self.is_in_building = True
-					self.building_id = i
-					self.building_cooldown = 4.0
-					# Even is up or right, Odd is down or left
-					if self.path < 8 and self.path % 2 == 0:
-						# Go up
-						self.building_direction = UP
-					elif self.path < 8 and self.path % 2 == 1:
-						# Go down (on your mother)
-						self.building_direction = DOWN
-					elif self.path >= 8 and self.path % 2 == 0:
-						# Go right
-						self.building_direction = RIGHT
-					elif self.path >= 8 and self.path % 2 == 1:
-						# Go left
-						self.building_direction = LEFT
-#					print "Player has entered building ", i, " going ", self.building_direction
-					if not suppress_update:
-						self.update_remote_state()
-				i += 1
-		
+	def building_id(self):
+		if isinstance(self.node, Building):
+			return self.node.id
+		elif isinstance(self.next_node(), Building):
+			return self.next_node().id
+		else:
+			return None
+
+	def is_in_building(self):
+		return self.building_id() != None
+
 	def bomb(self):
 		# if in building, set bomb
-		if self.is_in_building and self.has_bomb:
-			self.bomb_location = self.building_id
+		if self.is_in_building() and self.has_bomb:
+			self.bomb_location = self.building_id()
 			self.bomb_marker = sprite.Sprite(self.BOMB_MARKER, batch=World.batch,
 					group=anim.SKY)
 			self.bomb_marker.x, self.bomb_marker.y = World.get_world().buildings[self.bomb_location].screen_coords()
@@ -435,15 +319,12 @@ class Dude:
 		
 		# if bomb in play, set off bomb
 		elif self.bomb_location != None and self.alive:
-#			print "Set off bomb in building ", self.bomb_location
 			World.get_world().buildings[self.bomb_location].explode(self.id)
 			self.has_bomb = False
-			if not (self.is_in_building and self.building_id == self.bomb_location):
+			if not (self.is_in_building() and self.building_id == self.bomb_location):
 				laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
 				clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
-		# no bomb
-#			print "Player has no bomb, tried to set one off"
 
 	def shoot(self):
 		if self.shot_cooldown > 0 or not self.alive: return
@@ -481,143 +362,6 @@ class Dude:
 		if direction == DOWN:
 			return UP
 
-	# This function returns the next path which the dude will cross.
-	def next_intersect(self):
-		if self.location in PATH_INTERSECTS:
-#			print "in intersects"
-			x = PATH_INTERSECTS.index(self.location)
-		else:
-			x = 0
-
-			while PATH_INTERSECTS[x] < self.location and x < (BUILDINGS_X * 2 - 1):
-				x += 1
-
-			if not self.forward() and x > 0:
-				x -= 1
-
-		if left_right_path(self.path):
-			x += BUILDINGS_X * 2
-
-		return x
-
-	def in_intersect(self):
-		return self.location in PATH_INTERSECTS
-
-	def destination_row_coordinates(self):
-		next_intersect_id = self.next_intersect()
-		if next_intersect_id >= 8:
-			next_intersect_id -= 8
-
-		if self.path < BUILDINGS_X * 2:
-			y, x = self.path, next_intersect_id
-		else:
-			x, y = self.path - 8, next_intersect_id
-
-		return (x, y)
-
-	def valid_next_directions(self):
-		x, y = self.destination_row_coordinates()
-
-		valid_directions = []
-
-		if x > 0:
-			valid_directions.append(LEFT)
-		if x < 7:
-			valid_directions.append(RIGHT)
-		if y > 0:
-			valid_directions.append(DOWN)
-		if y < 7:
-			valid_directions.append(UP)
-
-		return valid_directions
-
-	def workout_next_direction(self, suppress_update=False):
-#		print "workout next direction. Old direction:", self.direction
-		directions = self.valid_next_directions()
-#		print "valid directions:", directions
-#		self.next_direction = directions[0]
-		self.next_direction = random.choice(directions)
-		if not suppress_update:
-			self.update_remote_state()
-
-	# do movement update.
-	def movement_update_helper(self, time):
-		frame_distance = time * self.SPEED
-
-		if self.forward():
-			# going from 0 to 1
-			nextlocation = self.location + frame_distance
-		else:
-			# going from 1 to 0
-			nextlocation = self.location - frame_distance
-		
-		while True:
-			# Few cases:
-			# - We're at an intersection: (optionally) turn, figure out new next_direction
-			# - We're going along a straight path. Just move to next intersection
-
-			# Pump the next_direction
-			if self.in_intersect() and self.next_direction != None:
-#				print "Turning in intersection. Should only happen once per corner"
-
-				intersect = self.next_intersect()
-
-				# ... just for debugging
-#				x, y = self.destination_row_coordinates()
-#				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
-
-				if self.direction != self.next_direction:
-					if self.next_direction == self.opposite(self.direction):
-						self.direction = self.next_direction
-					else:
-						self.direction = self.next_direction
-						self.location = PATH_INTERSECTS[self.path]
-						self.path = intersect
-
-				self.next_direction = None
-
-#				x, y = self.destination_row_coordinates()
-#				print "We are at %d, %d on path %d going direction %d. Next intersect at %d" % (x, y, self.path, self.direction, intersect)
-
-			if self.in_intersect() and self.next_direction == None:
-#				print "Moving away from intersect by %f" % frame_distance
-
-				if self.forward():
-					self.location += frame_distance
-				else:
-					self.location -= frame_distance
-
-				if (self.player_id is None and World.is_server) or \
-						(self.is_active_player() and (self.idle_time == 0. or \
-							(not self.direction in self.valid_next_directions()))):
-#					print "workout"
-					self.workout_next_direction()
-
-				return
-
-			if not self.in_intersect():
-#				print "between intersect. Moving forward..."
-
-				intersect = self.next_intersect()
-				next_path_intersect = PATH_INTERSECTS[intersect]
-
-				if (self.forward() and nextlocation > next_path_intersect) \
-					or (not self.forward() and nextlocation < next_path_intersect):
-						# Just advance to the intersect
-					pre_distance = abs(self.location - next_path_intersect)
-					post_distance = frame_distance - pre_distance
-
-					# now advance to the intersect
-					self.location = next_path_intersect
-					frame_distance = post_distance
-				else:
-					if self.forward():
-						self.location += frame_distance
-					else:
-						self.location -= frame_distance
-
-					return
-
 	def get_player(self):
 		if self.player_id == None:
 			return None
@@ -650,6 +394,64 @@ class Dude:
 		if not suppress_update:
 			self.update_remote_state()
 
+	def valid_next_directions(self):
+		dirs = self.next_node().edges.keys()
+		if isinstance(self.node, Building):
+			dirs.remove(self.opposite(self.direction))
+		return dirs
+
+	def workout_next_direction(self, suppress_update=False):
+		directions = self.valid_next_directions()
+		self.next_direction = random.choice(directions)
+		if not suppress_update:
+			self.update_remote_state()
+
+	def entering_node(self, node):
+		if isinstance(node, Building):
+			if node.type == Building.TYPE_CLOTHES:
+				# in a clothes store, get random clothes
+				if self.am_incharge():
+					self.random_outfit()
+
+				if self.is_active_player():
+					CASH_SOUND.play()
+
+			elif node.type == Building.TYPE_BOMB:
+				# in a bomb store
+				if self.has_bomb == False and self.bomb_location == None:
+					# purchase a bomb
+					self.has_bomb = True
+					CASH_SOUND.play()
+		else:
+			# not entering a building
+			if isinstance(self.node, Building):
+				# but currently inside one
+				DOOR_CLOSE_SOUND.play()
+				player = self.get_player()
+				if player != None and player.mission == Player.MISSION_BUILDING \
+						and player.mission_target == self.building_id:
+					# player has completed a mission in a building
+					player.complete_mission()
+
+	def changed_node(self):
+		if isinstance(self.next_node(), Building):
+			DOOR_OPEN_SOUND.play()
+
+	# do movement update.
+	def movement_update_helper(self, time):
+		frame_distance = time * self.SPEED
+		self.distance += frame_distance
+		distance_to_next_node = self.node.distanceTo(self.direction)
+		if self.distance >= distance_to_next_node:
+			self.entering_node(self.next_node())
+			self.node = self.next_node()
+			self.direction = self.next_direction
+			self.distance -= distance_to_next_node
+			if (self.player_id is None and World.is_server) or \
+					(self.is_active_player() and (self.idle_time <= 0 or \
+						(not self.next_direction in self.valid_next_directions()))):
+				self.workout_next_direction()
+			self.changed_node()
 
 	def update(self, time):
 		if not self.alive:
@@ -663,67 +465,15 @@ class Dude:
 						clock.schedule_once(lambda dt: self.respawn(), 5)
 			return
 
-		if World.is_server and self.player_id is None:
-			self.time_to_enter -= time
-			if self.time_to_enter <= 0:
-				self.enter()
-				self.time_to_enter = random.random() * 20 + 3
-
 		self.idle_time -= time
 		if self.idle_time < 0: self.idle_time = 0
 
-		if self.shot_cooldown > 0:
-			self.shot_cooldown -= time
-			if self.shot_cooldown < 0:
-				self.shot_cooldown = 0
+		self.shot_cooldown -= time
+		if self.shot_cooldown < 0: self.shot_cooldown = 0
 
-		if self.is_in_building:
-			start_time = self.building_cooldown
-
-			self.building_cooldown -= time
-			if start_time >= 2.0 and self.building_cooldown < 2.0:
-				self.sprite.visible = True
-				# End point of building travel. Buy from shop
-				if World.get_world().buildings[self.building_id].type == Building.TYPE_CLOTHES:
-					# in a clothes store, get random clothes
-					if self.am_incharge():
-						self.random_outfit()
-						self.update_remote_state()
-
-					if self.is_active_player():
-						CASH_SOUND.play()
-
-				elif World.get_world().buildings[self.building_id].type == Building.TYPE_BOMB:
-					# in a bomb store
-					if self.has_bomb == False and self.bomb_location == None:
-						# purchase a bomb
-#						print "Picked up a bomb"
-						self.has_bomb = True
-						CASH_SOUND.play()
-			if self.building_cooldown < 0:
-#				print "finished in building, moving on"
-				self.is_in_building = False
-				player = self.get_player()
-				DOOR_CLOSE_SOUND.play()
-				if player != None and player.mission == Player.MISSION_BUILDING \
-						and player.mission_target == self.building_id:
-					# player has completed a mission in a building
-					player.complete_mission()
-
-				return
-			return
 		if self.stopped:
 			return
 
 		self.movement_update_helper(time)
-
-		if self.location < PATH_INTERSECTS[0]:
-			self.location = PATH_INTERSECTS[0]
-		elif self.location > PATH_INTERSECTS[7]:
-			self.location = PATH_INTERSECTS[7]
-
-#		if left_right_path(self.path) != (self.direction == LEFT or self.direction == RIGHT):
-#			print "Wargh direction set wrong"
-
 
 import net

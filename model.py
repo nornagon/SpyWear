@@ -2,6 +2,7 @@ import random
 from pyglet import *
 import math
 import anim
+from map import *
 
 LEFT, RIGHT, UP, DOWN = range(4)
 
@@ -276,6 +277,7 @@ class World:
 		self.background = image.load('assets/city_all.png')
 		self.hud_mockup = image.load('assets/hud_mockup.png')
 		self.doors = []
+		self.map = Map()
 
 		self.win = sprite.Sprite(image.load('assets/compl.png'), batch=World.batch, group=anim.OVERLAY)
 		self.win.x = 256
@@ -302,7 +304,9 @@ class World:
 			for i in xrange(16):
 				building = Building(i, type=building_types[i])
 				self.buildings.append(building)
-				self.add_door(building)
+				self.map.add_node(building) # XXX hack... buildings must be the first 16 nodes
+
+			self.create_paths()
 
 			for i in xrange(20):
 				self.add_dude()
@@ -315,11 +319,14 @@ class World:
 			for i in xrange(len(building_state)):
 				building = Building(i, state=building_state[i])
 				self.buildings.append(building)
-				self.add_door(building)
+				self.map.add_node(building)
 
-			self.dudes = [Dude(state=s) for s in dude_state]
+			self.create_paths()
+
+			self.dudes = [Dude(self, state=s) for s in dude_state]
 
 			self.set_players_state(player_state)
+
 
 	__instance = None
 	@classmethod
@@ -329,6 +336,110 @@ class World:
 	@classmethod
 	def set_world(cls, world):
 		cls.__instance = world
+
+	# |  |         |  |   |
+	# |  |<--104-->|28|   |
+	# |  +---------+  |42 |
+	# |    28         |   |
+	# +---------------+---+---
+	#  <-------202------->
+	def create_paths(self):
+		BL, TL, TR, BR = range(4)
+		building_nodes = {}
+		for yb in xrange(4):
+			for xb in xrange(4):
+				b_nodes = [
+						Node(1 + 14+xb*202, 1 + 14+yb*202), # bottom-left
+						Node(1 + 14+xb*202, 1 + 28+104+14+yb*202), # top-left
+						Node(1 + 28+104+14+xb*202, 1 + 28+104+14+yb*202), # top-right
+						Node(1 + 28+104+14+xb*202, 1 + 14+yb*202), # bottom-right
+					]
+
+				for n in b_nodes:
+					self.map.add_node(n)
+
+				building_nodes[xb,yb] = b_nodes
+
+		for yb in xrange(4):
+			for xb in xrange(4):
+				bnodes = building_nodes[xb,yb]
+
+				# link internally
+				bnodes[BL].edges[UP]    = bnodes[TL]
+				bnodes[TL].edges[DOWN]  = bnodes[BL]
+				bnodes[TL].edges[RIGHT] = bnodes[TR]
+				bnodes[TR].edges[LEFT]  = bnodes[TL]
+				bnodes[TR].edges[DOWN]  = bnodes[BR]
+				bnodes[BR].edges[UP]    = bnodes[TR]
+				bnodes[BR].edges[LEFT]  = bnodes[BL]
+				bnodes[BL].edges[RIGHT] = bnodes[BR]
+
+				if xb < 3:
+					# link to the right
+					other_bnodes = building_nodes[xb+1,yb]
+					bnodes[TR].edges[RIGHT] = other_bnodes[TL]
+					bnodes[BR].edges[RIGHT] = other_bnodes[BL]
+				if xb > 0:
+					# link to the left
+					other_bnodes = building_nodes[xb-1,yb]
+					bnodes[TL].edges[LEFT] = other_bnodes[TR]
+					bnodes[BL].edges[LEFT] = other_bnodes[BR]
+
+				if yb < 3:
+					# link up
+					other_bnodes = building_nodes[xb,yb+1]
+					bnodes[TL].edges[UP] = other_bnodes[BL]
+					bnodes[TR].edges[UP] = other_bnodes[BR]
+				if yb > 0:
+					# link down
+					other_bnodes = building_nodes[xb,yb-1]
+					bnodes[BL].edges[DOWN] = other_bnodes[TL]
+					bnodes[BR].edges[DOWN] = other_bnodes[TR]
+
+		for b in self.buildings:
+			xb, yb = b.id % 4, b.id / 4
+			side, dist = Building.BUILDING_TYPE[b.type][1] # (UP, 0.5) = top side, half way
+
+			door_node = Node(0,0)
+			self.map.add_node(door_node)
+			bnodes = building_nodes[xb,yb]
+
+			if side == UP:
+				door_node.x = 1 + xb*202 + 28 + 104 * dist
+				door_node.y = 1 + yb*202 + 28 + 104 + 14
+				door_node.edges[LEFT]  = bnodes[TL]
+				door_node.edges[RIGHT] = bnodes[TR]
+				bnodes[TL].edges[RIGHT] = door_node
+				bnodes[TR].edges[LEFT]  = door_node
+				door_node.edges[DOWN] = b
+				b.edges[UP] = door_node
+			elif side == DOWN:
+				door_node.x = 1 + xb*202 + 28 + 104 * dist
+				door_node.y = 1 + yb*202 + 14
+				door_node.edges[LEFT]  = bnodes[BL]
+				door_node.edges[RIGHT] = bnodes[BR]
+				bnodes[BL].edges[RIGHT] = door_node
+				bnodes[BR].edges[LEFT]  = door_node
+				door_node.edges[UP] = b
+				b.edges[DOWN] = door_node
+			elif side == LEFT:
+				door_node.x = 1 + xb*202 + 14
+				door_node.y = 1 + yb*202 + 28 + 104 * dist
+				door_node.edges[UP]   = bnodes[TL]
+				door_node.edges[DOWN] = bnodes[BL]
+				bnodes[TL].edges[DOWN] = door_node
+				bnodes[BL].edges[UP]   = door_node
+				door_node.edges[RIGHT] = b
+				b.edges[LEFT] = door_node
+			elif side == RIGHT:
+				door_node.x = 1 + xb*202 + 28 + 104 + 14
+				door_node.y = 1 + yb*202 + 28 + 104 * dist
+				door_node.edges[UP]   = bnodes[TR]
+				door_node.edges[DOWN] = bnodes[BR]
+				bnodes[TR].edges[DOWN] = door_node
+				bnodes[BR].edges[UP]   = door_node
+				door_node.edges[LEFT] = b
+				b.edges[RIGHT] = door_node
 
 	def allocate_new_playerid(self, suppress_update=False):
 		if not None in self.players:
@@ -361,7 +472,7 @@ class World:
 
 
 	def add_dude(self):
-		d = Dude(id = len(self.dudes))
+		d = Dude(self, id = len(self.dudes))
 		d.randomise(suppress_update=True)
 		self.dudes.append(d)
 
@@ -384,32 +495,6 @@ class World:
 
 		return nearestDude
 
-	def add_door(self, building):
-		# building ID determines location
-		x = (28 + 202 * (building.id % 4))/768.
-		y = (28 + 202 * (building.id / 4))/768.
-		# door ID determines path and location float
-		doorside, dooroffset = building.BUILDING_TYPE[building.type][1]
-		if doorside == LEFT:
-			path = (building.id % 4) * 2 + 8
-			door_location = y + (dooroffset * 104)/768.0
-			self.doors.append((path, door_location))
-
-		if doorside == RIGHT:
-			path = (building.id % 4) * 2 + 9
-			door_location = y + (dooroffset * 104)/768.0
-			self.doors.append((path, door_location))
-
-		if doorside == DOWN:
-			path = (building.id / 4) * 2
-			door_location = x + (dooroffset * 104)/768.0
-			self.doors.append((path, door_location))
-
-		if doorside == UP:
-			path = (building.id / 4) * 2 + 1
-			door_location = x + (dooroffset * 104)/768.0
-			self.doors.append((path, door_location))
-                
 	def get_player_dude(self, player_id):
 		return self.dudes[player_id]
 		
@@ -423,7 +508,6 @@ class World:
 	def draw(self, window):
 		# background
 		self.background.blit(256,0)
-#		self.hud_mockup.blit(0,0)
 
 		self.draw_hud()
 
@@ -481,8 +565,6 @@ class World:
 			self.set_player_state(s)
 	
 	def set_player_state(self, player_state):
-		print "set_player_state", player_state
-
 		if player_state == None:
 			return
 
@@ -516,7 +598,7 @@ class World:
 
 		self.buildings[building_id].explode(terrorist_id, suppressBroadcast=True)
 
-class Building:
+class Building(Node):
 	TYPE_CLOTHES, TYPE_BOMB, TYPE_HOSPITAL, TYPE_MUSEUM,\
 	TYPE_DISCO, TYPE_ARCADE, TYPE_CARPARK, TYPE_FACTORY,\
 	TYPE_OFFICE, TYPE_PARK, TYPE_WAREHOUSE, TYPE_BANK,\
@@ -575,6 +657,10 @@ class Building:
 	DOOR_LIGHT = image.load('assets/light_beam.png')
 
 	def __init__(self, id, type=None, state=None):
+		x = 1 + 28 + 202 * (id % 4) + 104/2
+		y = 1 + 28 + 202 * (id / 4) + 104/2
+		Node.__init__(self, x, y)
+
 		self.id = id
 		self.type = type
 		self.has_bomb = False
@@ -585,37 +671,34 @@ class Building:
 
 		self.sprite = sprite.Sprite(self.BUILDING_TYPE[self.type][0],
 				group=anim.ROOF, batch=World.batch)
-		self.sprite.x = 256 + 1 + 28 + 202 * (id % 4) + 104/2
-		self.sprite.y = 1 + 28 + 202 * (id / 4) + 104/2
+		self.sprite.x = 256 + x
+		self.sprite.y = y
 
 		self.rubble = sprite.Sprite(self.RUBBLE, group=anim.ROOF, batch=World.batch)
-		self.rubble.x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
-		self.rubble.y = 1 + 28 + 202 * (self.id / 4) + 104/2
+		self.rubble.x = 256 + x
+		self.rubble.y = y
 		self.rubble.visible = False
 
 		self.light = sprite.Sprite(self.DOOR_LIGHT, group=anim.PATH,
 				batch=World.batch)
 		door_loc = self.BUILDING_TYPE[self.type][1]
 
-		x = 256 + 1 + 28 + 202 * (id % 4)
-		y = 1 + 28 + 202 * (id / 4)
-
 		# now we set location on the side
 		if door_loc[0] == LEFT:
 			self.light.rotation = -90
-			self.light.x = x
+			self.light.x = x + 256
 			self.light.y = y + door_loc[1] * 104 + self.light.image.width // 2
 		elif door_loc[0] == RIGHT:
 			self.light.rotation = 90
-			self.light.x = x + 104
+			self.light.x = x + 104 + 256
 			self.light.y = y + door_loc[1] * 104 - self.light.image.width // 2
 		elif door_loc[0] == DOWN:
 			self.light.rotation = 180
-			self.light.x = x + door_loc[1] * 104 + self.light.image.width // 2
+			self.light.x = x + door_loc[1] * 104 + self.light.image.width // 2 + 256
 			self.light.y = y
 		elif door_loc[0] == UP:
 			self.light.rotation = 0
-			self.light.x = x + door_loc[1] * 104 - self.light.image.width // 2
+			self.light.x = x + door_loc[1] * 104 - self.light.image.width // 2 + 256
 			self.light.y = y + 104
 
 		self.explosion_sprite = None
@@ -640,9 +723,7 @@ class Building:
 				self.rubble.visible = False
 
 	def screen_coords(self):
-		x = 256 + 1 + 28 + 202 * (self.id % 4) + 104/2
-		y = 1 + 28 + 202 * (self.id / 4) + 104/2
-		return (x,y)
+		return (256 + self.x, self.y)
 
 	def explode(self, terrorist_id, suppressBroadcast=False):
 		if self.exploding: return
