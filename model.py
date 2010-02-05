@@ -477,14 +477,14 @@ class World:
 		self.dudes.append(d)
 
 	def nearest_dude_to(self, dude):
-		if dude.is_in_building: return None
+		if dude.is_in_building(): return None
 		x1, y1 = dude.xy()
 		mindist = None
 		nearestDude = None
 		for d in self.dudes:
 			if d is dude: continue
 			if not d.alive: continue
-			if d.is_in_building: continue
+			if d.is_in_building(): continue
 			x2, y2 = d.xy()
 			dy = y2 - y1
 			dx = x2 - x1
@@ -738,7 +738,8 @@ class Building(Node):
 		for p in World.get_world().players:
 			if p == None:
 				continue
-			if World.get_world().is_server and terrorist_id != p.id and p.get_dude().is_in_building and p.get_dude().building_id == self.id:
+			if World.get_world().is_server and terrorist_id != p.id and \
+				p.get_dude().is_in_building() and p.get_dude().building_id == self.id:
 				World.get_world().set_score(1)
 
 		if not World.mute: self.BOMB_SOUND.play()
@@ -762,7 +763,7 @@ class Building(Node):
 					player.mission_target_bombed()
 
 				for dude in World.get_world().dudes:
-					if dude.is_in_building and dude.building_id == self.id:
+					if dude.is_in_building() and dude.building_id == self.id:
 						# a player has been caught inside the bomb blast
 						dude.die()
 						killed_civ = False

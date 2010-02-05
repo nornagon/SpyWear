@@ -157,8 +157,6 @@ class Dude:
 		self.next_direction = self.next_node().edges.keys()[0] # TODO: random
 
 		self.random_outfit(suppress_update = True)
-		self.enter(suppress_update = True)
-		self.building_cooldown = 2.
 		self.update_remote_state()
 
 	def xy(self):
