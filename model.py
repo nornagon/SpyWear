@@ -112,7 +112,7 @@ class Player(object):
 
 		if oldmission != self.mission or oldmission_target != self.mission_target:
 			if self.mission != None and self.id == World.my_player_id:
-				MISSION_ASSIGN_SOUND.play()
+				if not World.mute: MISSION_ASSIGN_SOUND.play()
 
 			self.clear_mission_sprites()
 	
@@ -187,7 +187,7 @@ class Player(object):
 				self.update_mission_sprites()
 				self.update_remote_state()
 				if self.id == World.my_player_id:
-					MISSION_ASSIGN_SOUND.play()
+					if not World.mute: MISSION_ASSIGN_SOUND.play()
 
 			self.hint_cooldown -= time
 			if self.hint_cooldown <= 0.0:
@@ -251,7 +251,7 @@ class Player(object):
 
 	def complete_mission(self):
 		print "Player ", self.id, " has completed a mission"
-		MISSION_WIN_SOUND.play()
+		if not World.mute: MISSION_WIN_SOUND.play()
 		self.score += 1
 		self.mission = None
 		self.mission_cooldown = 7.0
@@ -738,7 +738,7 @@ class Building(Node):
 			if World.get_world().is_server and terrorist_id != p.id and p.get_dude().is_in_building and p.get_dude().building_id == self.id:
 				World.get_world().set_score(1)
 
-		self.BOMB_SOUND.play()
+		if not World.mute: self.BOMB_SOUND.play()
 		self.exploding = True
 		def explosion_animation(dt):
 			self.explosion_sprite = sprite.Sprite(self.EXPLOSION, group=anim.SKY,

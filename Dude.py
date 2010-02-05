@@ -314,8 +314,7 @@ class Dude:
 			clock.schedule_once(start_fade, 1.5)
 
 			self.has_bomb = False
-			ARM_BOMB_SOUND.play()
-#			print "laid bomb in building ", self.building_id
+			if not World.mute: ARM_BOMB_SOUND.play()
 		
 		# if bomb in play, set off bomb
 		elif self.bomb_location != None and self.alive:
@@ -323,7 +322,7 @@ class Dude:
 			self.has_bomb = False
 			if not (self.is_in_building() and self.building_id == self.bomb_location):
 				laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
-				clock.schedule_once(lambda dt: laugh.play(), 1.0)
+				if not World.mute: clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
 
 	def shoot(self):
@@ -332,7 +331,7 @@ class Dude:
 		if not dead_guy: return
 		net.my_peer.broadcast_die(World.my_player_id, dead_guy.id)
 		dead_guy.die()
-		KILL_SOUND.play()
+		if not World.mute: KILL_SOUND.play()
 		if dead_guy.player_id == None:
 			# Killed a Civilian, send out hint about player
 			if random.random() < 0.5:
@@ -414,19 +413,19 @@ class Dude:
 					self.random_outfit()
 
 				if self.is_active_player():
-					CASH_SOUND.play()
+					if not World.mute: CASH_SOUND.play()
 
 			elif node.type == Building.TYPE_BOMB:
 				# in a bomb store
 				if self.has_bomb == False and self.bomb_location == None:
 					# purchase a bomb
 					self.has_bomb = True
-					CASH_SOUND.play()
+					if not World.mute: CASH_SOUND.play()
 		else:
 			# not entering a building
 			if isinstance(self.node, Building):
 				# but currently inside one
-				DOOR_CLOSE_SOUND.play()
+				if not World.mute: DOOR_CLOSE_SOUND.play()
 				player = self.get_player()
 				if player != None and player.mission == Player.MISSION_BUILDING \
 						and player.mission_target == self.building_id:
@@ -435,7 +434,7 @@ class Dude:
 
 	def changed_node(self):
 		if isinstance(self.next_node(), Building):
-			DOOR_OPEN_SOUND.play()
+			if not World.mute: DOOR_OPEN_SOUND.play()
 
 	# do movement update.
 	def movement_update_helper(self, time):
