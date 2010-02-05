@@ -64,6 +64,9 @@ class Dude:
 	TURN_MARKER.anchor_x = TURN_MARKER.width // 2
 	TURN_MARKER.anchor_y = TURN_MARKER.height // 2
 	TURN_MARKER_FLIP = TURN_MARKER.texture.get_transform(flip_x = True)
+	STRAIGHT_MARKER = image.load('assets/straight_arrow.png')
+	STRAIGHT_MARKER.anchor_x = STRAIGHT_MARKER.width // 2
+	STRAIGHT_MARKER.anchor_y = STRAIGHT_MARKER.height // 2
 
 	# dude speed in pixels/sec
 	SPEED = 50.0
@@ -209,6 +212,8 @@ class Dude:
 			self.turn_marker.visible = False
 			self.turn_marker_flip = sprite.Sprite(self.TURN_MARKER_FLIP, batch=World.batch, group=anim.PATH)
 			self.turn_marker_flip.visible = False
+			self.straight_marker = sprite.Sprite(self.STRAIGHT_MARKER, batch=World.batch, group=anim.PATH)
+			self.straight_marker.visible = False
 
 
 		if self.direction == LEFT:
@@ -229,9 +234,7 @@ class Dude:
 			self.marker.x = self.sprite.x
 			self.marker.y = self.sprite.y
 
-			if self.next_direction != None and self.next_direction != self.direction and \
-					self.next_direction != self.opposite(self.direction) and \
-					not isinstance(self.next_node(), Building):
+			if self.next_direction != None and not isinstance(self.next_node(), Building):
 				if self.next_direction == LEFT and self.direction == DOWN:
 					m = self.turn_marker
 					m.rotation = 180
@@ -256,8 +259,19 @@ class Dude:
 				elif self.next_direction == LEFT and self.direction == UP:
 					m = self.turn_marker_flip
 					m.rotation = 0
+				elif self.direction == self.next_direction or \
+						self.direction == self.opposite(self.next_direction):
+					m = self.straight_marker
+					if self.next_direction == LEFT:
+						m.rotation = -90
+					elif self.next_direction == RIGHT:
+						m.rotation = 90
+					elif self.next_direction == UP:
+						m.rotation = 0
+					elif self.next_direction == DOWN:
+						m.rotation = 180
 
-				for b in [self.turn_marker, self.turn_marker_flip]:
+				for b in [self.turn_marker, self.turn_marker_flip, self.straight_marker]:
 					if m is b:
 						b.visible = True
 					else:
