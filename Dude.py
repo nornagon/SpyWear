@@ -455,14 +455,14 @@ class Dude:
 
 	# do movement update.
 	def movement_update_helper(self, time):
+		if not self.next_direction in self.valid_next_directions():
+			self.workout_next_direction() # uhhhh... someone lagged out :/
+
 		frame_distance = time * self.SPEED
 		self.distance += frame_distance
 		distance_to_next_node = self.node.distanceTo(self.direction)
 		if self.distance >= distance_to_next_node:
 			self.entering_node(self.next_node())
-
-			if not self.next_direction in self.valid_next_directions():
-				self.workout_next_direction() # uhhhh... someone lagged out :/
 
 			self.node = self.next_node()
 			self.direction = self.next_direction
