@@ -122,6 +122,23 @@ class MainState(GameState):
 	def update(self, dt):
 		self.world.update(dt)
 
+class SplashState(GameState):
+	def enter_state(self):
+		self.anim = anim.load_anim('splash', loop=False)
+		self.sprite = sprite.Sprite(self.anim)
+		self.sprite.x = WIDTH // 2
+		self.sprite.y = HEIGHT // 2
+		@self.sprite.event
+		def on_animation_end():
+			state_controller.switch(MenuState)
+
+	def on_draw(self):
+		self.sprite.draw()
+
+	def exit_state(self):
+		del self.sprite
+		del self.anim
+
 class MenuState(GameState):
 	def __init__(self):
 		self.connecting = False
@@ -232,7 +249,7 @@ def pygletPump():
 		window.flip()
 
 state_controller = StateController(window)
-state_controller.switch(MenuState())
+state_controller.switch(SplashState())
 
 if not World.mute:
 	player2 = media.Player()
