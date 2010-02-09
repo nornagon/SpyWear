@@ -615,35 +615,35 @@ class Building(Node):
 	BUILDING_TYPE = {
 			TYPE_CLOTHES: (image.load('assets/Building_assets/clothes_test.png'), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/clothes_icon.png')),
-			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (UP, 0.5),
+			TYPE_BOMB: (image.load('assets/Building_assets/bomb_test.png'), (RIGHT, 0.78),
 				image.load('assets/New Hud/Building_Stamps/bomb_icon.png')),
 			TYPE_HOSPITAL: (image.load('assets/Building_assets/hospital_test.png'), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/hospital_icon.png')),
-			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (UP, 0.5),
+			TYPE_MUSEUM: (image.load('assets/Building_assets/museum_test.png'), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/museum_icon.png')),
 			TYPE_DISCO: (anim.load_anim('Building_assets/Disco_Anim', fps=2), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/club_icon.png')),
-			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (UP, 0.5),
+			TYPE_ARCADE: (image.load('assets/Building_assets/arcade_test.png'), (LEFT, 0.5),
 				image.load('assets/New Hud/Building_Stamps/arcade_icon.png')),
 			TYPE_CARPARK: (image.load('assets/Building_assets/carpark_test.png'), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/parking_icon.png')),
-			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (DOWN, 0.5),
+			TYPE_FACTORY: (anim.load_anim('Building_assets/Factory_anim', fps=7), (RIGHT, 0.3),
 				image.load('assets/New Hud/Building_Stamps/factory_icon.png')),
 			TYPE_OFFICE: (anim.load_anim('Building_assets/Office_anim', fps=1), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/office_icon.png')),
 			TYPE_PARK: (anim.load_anim('Building_assets/Park_Anim', fps=2), (UP, 0.5),
 				image.load('assets/New Hud/Building_Stamps/park_icon.png')),
-			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (UP, 0.5),
+			TYPE_WAREHOUSE: (image.load('assets/Building_assets/warehouse_test.png'), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/warehouse_icon.png')),
 			TYPE_BANK: (image.load('assets/Building_assets/bank_test.png'), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/bank_icon.png')),
-			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (UP, 0.5),
+			TYPE_RESTAURANT: (image.load('assets/Building_assets/cafe_test.png'), (UP, 0.3),
 				image.load('assets/New Hud/Building_Stamps/cafe_icon.png')),
-			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (UP, 0.5),
+			TYPE_TOWNHALL: (anim.load_anim('Building_assets/Hall_anim', fps=8), (DOWN, 0.5),
 				image.load('assets/New Hud/Building_Stamps/city_hall_icon.png')),
-			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (UP, 0.5),
+			TYPE_RADIO: (anim.load_anim('Building_assets/Radio_anim', fps=2), (DOWN, 0.7),
 				image.load('assets/New Hud/Building_Stamps/radio_icon.png')),
-			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (UP, 0.5),
+			TYPE_CHURCH: (image.load('assets/Building_assets/church_test.png'), (LEFT, 0.5),
 				image.load('assets/New Hud/Building_Stamps/church_icon.png')),
 			}
 
@@ -690,11 +690,11 @@ class Building(Node):
 		if door_loc[0] == LEFT:
 			self.light.rotation = -90
 			self.light.x = bx
-			self.light.y = by + door_loc[1] * 104 + self.light.image.width // 2
+			self.light.y = by + door_loc[1] * 104 - self.light.image.width // 2
 		elif door_loc[0] == RIGHT:
 			self.light.rotation = 90
 			self.light.x = bx + 104
-			self.light.y = by + door_loc[1] * 104 - self.light.image.width // 2
+			self.light.y = by + door_loc[1] * 104 + self.light.image.width // 2
 		elif door_loc[0] == DOWN:
 			self.light.rotation = 180
 			self.light.x = bx + door_loc[1] * 104 + self.light.image.width // 2
