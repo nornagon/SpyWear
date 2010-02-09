@@ -442,7 +442,7 @@ class Dude:
 			# not entering a building
 			if isinstance(self.node, Building):
 				# but currently inside one
-				if not World.mute: DOOR_CLOSE_SOUND.play()
+				if not World.mute: DOOR_CLOSE_SOUND.play().volume = 0.4
 				player = self.get_player()
 				if player != None and player.mission == Player.MISSION_BUILDING \
 						and player.mission_target == self.node.id:
@@ -451,7 +451,7 @@ class Dude:
 
 	def changed_node(self):
 		if isinstance(self.next_node(), Building):
-			if not World.mute: DOOR_OPEN_SOUND.play()
+			if not World.mute: DOOR_OPEN_SOUND.play().volume = 0.4
 
 	# do movement update.
 	def movement_update_helper(self, time):
