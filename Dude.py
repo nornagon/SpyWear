@@ -349,9 +349,10 @@ class Dude:
 				net.my_peer.broadcast_hint(self.id, 'appearance')
 			else:
 				net.my_peer.broadcast_hint(self.id, 'mission')
+			self.get_player().increment_score(-1)
 		else:
 			# Killed a Player
-			self.get_player().increment_score(1)
+			self.get_player().increment_score(2)
 		self.shot_cooldown = 5.
 
 	def die(self):
