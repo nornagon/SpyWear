@@ -76,7 +76,6 @@ class Dude:
 		self.direction = self.node.edges.keys()[0]
 		self.distance = 0.0
 		self.workout_next_direction(suppress_update=True)
-		self.stopped = False
 		self.outfit = HAT
 		self.colour = BLUE
 
@@ -113,7 +112,7 @@ class Dude:
 
 	def state(self):
 		return (self.id, self.node.id, self.distance, self.direction,
-				self.next_direction, self.stopped, self.outfit, self.colour,
+				self.next_direction, self.outfit, self.colour,
 				self.has_bomb, self.bomb_location, self.player_id,
 				self.alive)
 
@@ -123,7 +122,7 @@ class Dude:
 		old_colour = self.colour
 
 		(id, node_id, self.distance, self.direction,
-				self.next_direction, self.stopped, self.outfit, self.colour,
+				self.next_direction, self.outfit, self.colour,
 				self.has_bomb, self.bomb_location, self.player_id,
 				self.alive) = remotestate
 
@@ -169,7 +168,6 @@ class Dude:
 	def take_control_by(self, player_id, suppress_update=False):
 		self.player_id = player_id
 		self.idle_time = 0.0
-		self.stopped = False
 		if not suppress_update:
 			self.update_remote_state()
 
@@ -290,14 +288,8 @@ class Dude:
 		if not isinstance(self.next_node(), Building):
 			if new_direction in self.valid_next_directions():
 				self.next_direction = new_direction
-				self.stopped = False
 				self.update_remote_state()
  
-	def stopstart(self):
-		if not self.is_in_building():
-			self.stopped = not self.stopped
-			self.update_remote_state()
-
 	def building_id(self):
 		if isinstance(self.node, Building):
 			return self.node.id
@@ -490,9 +482,6 @@ class Dude:
 
 		self.shot_cooldown -= time
 		if self.shot_cooldown < 0: self.shot_cooldown = 0
-
-		if self.stopped:
-			return
 
 		self.movement_update_helper(time)
 

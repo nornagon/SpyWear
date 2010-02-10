@@ -105,8 +105,6 @@ class MainState(GameState):
 
 		if symbol in keybindings.keys():
 			dude.turn(keybindings[symbol])
-		elif symbol == key.SPACE:
-			dude.stopstart()
 		elif symbol == key.ENTER:
 			dude.enter()
 		elif symbol == key.B:
