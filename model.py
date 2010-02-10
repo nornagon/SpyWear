@@ -72,7 +72,7 @@ class Player(object):
 				x = 24, y = self.get_offset_y() + 76, width = 84, height = 26)
 
 		self.death_count = 0
-		self._score = 0
+		self.score = 0
 
 		self.appearance = None
 
@@ -161,7 +161,9 @@ class Player(object):
 		self.score_label.text = str(value * 1000)
 
 	def increment_score(self, inc=1):
-		self.score += 1
+		if self.score + inc < 0:
+			inc = -self.score
+		self.score += inc
 		self.update_remote_state()
 
 	score = property(getscore, setscore)
@@ -748,15 +750,7 @@ class Building(Node):
 			self.light.visible = False
 			self.rubble.visible = True
 
-			if World.get_world().is_server:
-				score_diff = 0
-				for p in World.get_world().players:
-					if p == None:
-						continue
-					if terrorist_id != p.id and p.get_dude().node is self:
-						score_diff += 1
-				if score_diff != 0:
-					World.get_world().players[terrorist_id].increment_score(score_diff)
+			terrorist = World.get_world().players[terrorist_id]
 
 			for player in World.get_world().players:
 				if player == None:
@@ -766,25 +760,27 @@ class Building(Node):
 					# bomb has destroyed a mission, wipe mission for no points
 					player.mission_target_bombed()
 
-				for dude in World.get_world().dudes:
-					if dude.is_in_building() and dude.building_id == self.id:
-						# a player has been caught inside the bomb blast
-						dude.die()
-						killed_civ = False
-						killed_player = False
-						if dude.player_id == None:
-							killed_civ = True
-							self.CIV_SCREAM.play()
-						else:
-							# Killed a Player that is not you
+			killed_civ = False
+			killed_player = False
+			for dude in World.get_world().dudes:
+				if dude.building_id() == self.id:
+					# a dude has been caught inside the bomb blast
+					if World.is_server:
+						terrorist.get_dude().kill(dude)
+					if dude.player_id == None:
+						killed_civ = True
+						if not World.mute: self.CIV_SCREAM.play()
+					else:
+						if dude.id != terrorist_id:
 							killed_player = True
-							self.DEATH_SCREAM.play()
-						if killed_civ and not killed_player:
-							# Killed an innocent without a player . . . broadcast a hint about this player
-							if random.random() < 0.5:
-								net.my_peer.broadcast_hint(player.id, 'appearance')
-							else:
-								net.my_peer.broadcast_hint(player.id, 'mission')
+						if not World.mute: self.DEATH_SCREAM.play()
+
+			if killed_civ and not killed_player:
+				# Killed an innocent without a player . . . broadcast a hint about this player
+				if random.random() < 0.5:
+					net.my_peer.broadcast_hint(terrorist.id, 'appearance')
+				else:
+					net.my_peer.broadcast_hint(terrorist.id, 'mission')
 
 			@self.explosion_sprite.event
 			def on_animation_end():

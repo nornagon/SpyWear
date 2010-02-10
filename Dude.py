@@ -38,7 +38,7 @@ LAUGH1_SOUND = resource.media('assets/Manic Laugh.wav', streaming=False)
 LAUGH2_SOUND = resource.media('assets/Evil Laugh.wav', streaming=False)
 ARM_BOMB_SOUND = resource.media('assets/Arming Bomb.wav', streaming=False)
 CASH_SOUND = resource.media('assets/Cash Register.wav', streaming=False)
-KILL_SOUND = resource.media('assets/Pistol Kill.wav', streaming=False)
+PISTOL_SOUND = resource.media('assets/Pistol Kill.wav', streaming=False)
 
 class Dude:
 	DUDE_OUTFITS = {
@@ -325,20 +325,26 @@ class Dude:
 		elif self.bomb_location != None and self.alive:
 			World.get_world().buildings[self.bomb_location].explode(self.id)
 			self.has_bomb = False
-			if not (self.is_in_building() and self.building_id == self.bomb_location):
+			if self.building_id() != self.bomb_location:
 				laugh = random.choice([LAUGH1_SOUND, LAUGH2_SOUND])
 				if not World.mute: clock.schedule_once(lambda dt: laugh.play(), 1.0)
 			self.bomb_location = None
+
+	def is_civilian(self):
+		return self.player_id is None
 
 	def shoot(self):
 		if self.shot_cooldown > 0 or not self.alive: return
 		dead_guy = World.get_world().nearest_dude_to(self)
 		if not dead_guy: return
-		net.my_peer.broadcast_die(World.my_player_id, dead_guy.id)
-		dead_guy.die()
-		if not World.mute: KILL_SOUND.play()
-		if dead_guy.player_id == None:
-			# Killed a Civilian, send out hint about player
+		if not World.mute: PISTOL_SOUND.play()
+		self.kill(dead_guy)
+
+	def kill(self, target):
+		net.my_peer.broadcast_die(self.id, target.id)
+		target.die()
+		if target.is_civilian():
+			# Killed a civilian, send out hint about player
 			if random.random() < 0.5:
 				net.my_peer.broadcast_hint(self.id, 'appearance')
 			else:
